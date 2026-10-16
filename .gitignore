@@ -1,0 +1,21 @@
+# Environment and secrets
+.env
+*.env
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Temporary media files (audio-only, deleted after transcribe)
+tmp/
+*.mp4
+*.m4a
+*.wav
+*.mp3
+
+# IDE
+.vscode/
+.idea/

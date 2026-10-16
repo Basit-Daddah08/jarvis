@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#080D19">
+  <title>ELION / JARVIS — Private Background Vault</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap">
+  <style>
+    :root {
+      --bg-canvas: #080D19;
+      --bg-header: #0D1426;
+      --bg-card: #121A2E;
+      --border-card: #263050;
+      --border-input: #2F3A66;
+      --text-main: #E8ECF8;
+      --text-muted: #9AA6C7;
+      --accent: #7C93FF;
+      --lime: #C6F26A;
+      --tag-tool-bg: #1E2A5A;
+      --tag-tool-text: #AFC0FF;
+      --tag-other-bg: #14352C;
+      --tag-other-text: #8FE0C4;
+      --danger: #FF5A5F;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+    .app-container {
+      width: 100%;
+      max-width: 560px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-canvas);
+      box-shadow: 0 0 60px rgba(0,0,0,0.65);
+      border-left: 1px solid #121A2E;
+      border-right: 1px solid #121A2E;
+      position: relative;
+    }
+    header {
+      background: var(--bg-header);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--border-card);
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .brand svg path { stroke: var(--accent); }
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: #1E2A5A;
+      color: #AFC0FF;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.4px;
+    }
+    .daemon-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0A0F1C;
+      border: 1px solid #1F2947;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .daemon-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #E8ECF8;
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 8px var(--lime);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(1.15); }
+    }
+    .search-input {
+      width: 100%;
+      min-height: 44px;
+      border-radius: 10px;
+      border: 1px solid var(--border-input);
+      background: #0A0F1C;
+      color: #fff;
+      padding: 0 14px;
+      font-size: 15px;
+      outline: none;
+      font-family: inherit;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    main {
+      flex: 1;
+      padding: 18px 20px 88px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Approval Banner */
+    .approval-banner {
+      color: #0A0F1C;
+      background: var(--lime);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .approval-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .approval-btn {
+      width: 100%;
+      background: #0D1426;
+      color: #fff;
+      border: 0;
+      border-radius: 10px;
+      min-height: 48px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Filter Chips */
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .filter-chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: none;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-card);
+      border-radius: 999px;
+      padding: 0 18px;
+      min-height: 44px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .chip.active {
+      background: var(--text-main);
+      color: #0A0F1C;
+      border-color: var(--text-main);
+    }
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Note Cards */
+    .notes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .note-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .note-card:hover { border-color: var(--accent); }
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .tag.tool, .tag.ai {
+      background: var(--tag-tool-bg);
+      color: var(--tag-tool-text);
+    }
+    .tag.other {
+      background: var(--tag-other-bg);
+      color: var(--tag-other-text);
+    }
+    .note-title {
+      display: block;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+    .note-meta {
+      display: block;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .note-snippet {
+      display: block;
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Ask Tab */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 230px);
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 12px;
+    }
+    .chat-msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #0A0F1C;
+      font-weight: 600;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-msg.jarvis {
+      align-self: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+      padding-top: 10px;
+    }
+    .chat-input {
+      flex: 1;
+      min-height: 48px;
+      border-radius: 12px;
+      border: 1px solid var(--border-input);
+      background: #0A0F1C;
+      color: #fff;
+      padding: 0 16px;
+      font-size: 15px;
+      outline: none;
+    }
+    .chat-send-btn {
+      background: var(--accent);
+      color: #0A0F1C;
+      border: 0;
+      border-radius: 12px;
+      padding: 0 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Bottom Navigation */
+    nav.bottom-nav {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 8px 18px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      max-width: 560px;
+      z-index: 20;
+    }
+    .nav-item {
+      background: none;
+      border: 0;
+      color: var(--text-muted);
+      min-height: 48px;
+      min-width: 68px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .nav-item.active {
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      width: 100%;
+      max-width: 560px;
+      background: #0D1426;
+      border-top: 1px solid var(--border-card);
+      border-radius: 20px 20px 0 0;
+      padding: 24px 20px 32px;
+      max-height: 85vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-title { font-size: 18px; font-weight: 800; }
+    .close-btn {
+      background: none;
+      border: 0;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .approval-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .approval-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .approval-badge {
+      background: #FF5A5F;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+    .approval-actions { display: flex; gap: 8px; }
+    .btn-approve {
+      flex: 1;
+      background: var(--lime);
+      color: #0A0F1C;
+      border: 0;
+      border-radius: 8px;
+      min-height: 42px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-reject {
+      flex: 1;
+      background: #263050;
+      color: #FF5A5F;
+      border: 0;
+      border-radius: 8px;
+      min-height: 42px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .code-box {
+      background: #080D19;
+      border: 1px solid #263050;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--lime);
+      word-break: break-all;
+    }
+    .btn-small {
+      background: #1E2A5A;
+      color: #AFC0FF;
+      border: 1px solid #2F3A66;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <div class="header-top">
+        <div class="brand">
+          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+            <path d="M3 4h16M3 11h16M3 18h10" stroke-width="3" stroke-linecap="round" fill="none"></path>
+          </svg>
+          <span>ELION / JARVIS</span>
+          <span class="brand-badge">LAPTOP DAEMON</span>
+        </div>
+        <button class="btn-small" onclick="triggerManualSync()">Sync Now</button>
+      </div>
+
+      <!-- Live Background Daemon Status Bar -->
+      <div class="daemon-bar">
+        <div class="daemon-indicator">
+          <span class="pulse-dot" id="daemonDot"></span>
+          <span id="daemonTaskText">Background Daemon Active • Watching Saves</span>
+        </div>
+        <span id="daemonStatsText">0 queued</span>
+      </div>
+
+      <input id="searchInput" class="search-input" type="search" placeholder="Search transcribed notes, tools, links..." oninput="filterNotes()">
+    </header>
+
+    <main>
+      <!-- TAB 1: INBOX -->
+      <div id="tabInbox" class="tab-content active">
+        <div class="approval-banner" id="approvalBanner">
+          <div class="approval-title" id="approvalCountText">Loading skill queue...</div>
+          <button class="approval-btn" onclick="openApprovalModal()">Review now</button>
+        </div>
+
+        <div class="filter-chips">
+          <button class="chip active" onclick="setFilter('all', this)">All</button>
+          <button class="chip" onclick="setFilter('tool', this)">Tools</button>
+          <button class="chip" onclick="setFilter('ai', this)">AI</button>
+          <button class="chip" onclick="setFilter('other', this)">Other</button>
+        </div>
+
+        <h2 class="section-title">Today's INBOX</h2>
+        <div class="notes-list" id="inboxList"></div>
+      </div>
+
+      <!-- TAB 2: LIBRARY -->
+      <div id="tabLibrary" class="tab-content">
+        <h2 class="section-title">Vault Library</h2>
+        <div class="notes-list" id="libraryList"></div>
+      </div>
+
+      <!-- TAB 3: ASK (LOCAL VAULT QUERY) -->
+      <div id="tabAsk" class="tab-content">
+        <h2 class="section-title">Ask about your saves</h2>
+        <div class="chat-container">
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg jarvis">
+              ELION Vault ready. Ask me anything about your saved reels, e.g. <em>"What tools did we save this week?"</em>
+            </div>
+          </div>
+          <form class="chat-input-row" onsubmit="handleChatSubmit(event)">
+            <input id="chatInput" class="chat-input" type="text" placeholder="What tools did we save this week?" autocomplete="off">
+            <button type="submit" class="chat-send-btn">Ask</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB 4: BACKGROUND SOURCES & MOBILE INTEGRATION -->
+      <div id="tabSources" class="tab-content">
+        <h2 class="section-title">Zero-Interruption Background Sync</h2>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.45;">
+          You never have to leave Instagram, TikTok, or YouTube. ELION runs silently in the background on your laptop and transcribes videos automatically.
+        </p>
+
+        <!-- Integration 1: Native Instagram Saved Sync -->
+        <div class="approval-item">
+          <div class="approval-row">
+            <span style="font-weight: 700; font-size: 15px;">1. Native Instagram "Save" Sync</span>
+            <span class="tag other" id="igSyncBadge" style="margin:0;">BACKGROUND</span>
+          </div>
+          <span style="color: var(--text-muted); font-size: 13px; line-height: 1.45;">
+            Just tap the normal <strong>Bookmark / Save</strong> icon inside Instagram on your phone. The laptop daemon polls your Saved folder in the background, downloads audio-only, and runs Whisper locally.
+          </span>
+        </div>
+
+        <!-- Integration 2: Silent In-App Share Webhook -->
+        <div class="approval-item">
+          <div class="approval-row">
+            <span style="font-weight: 700; font-size: 15px;">2. In-App Mobile Share Webhook</span>
+            <span class="tag tool" style="margin:0;">INSTANT</span>
+          </div>
+          <span style="color: var(--text-muted); font-size: 13px; line-height: 1.45;">
+            Point an iOS Shortcut or Android "HTTP Share" target to this background webhook. Tapping <strong>Share &rarr; Save to ELION</strong> inside Instagram/TikTok queues the video in 10ms without ever leaving your app:
+          </span>
+          <div class="code-box" id="webhookUrlBox">http://localhost:8080/api/webhook/save?url=</div>
+        </div>
+
+        <!-- Integration 3: Cross-Device Clipboard Watcher -->
+        <div class="approval-item">
+          <div class="approval-row">
+            <span style="font-weight: 700; font-size: 15px;">3. Clipboard Auto-Capture</span>
+            <button class="btn-small" id="btnClipboardToggle" onclick="toggleClipboard()">ACTIVE</button>
+          </div>
+          <span style="color: var(--text-muted); font-size: 13px; line-height: 1.45;">
+            Tap "Copy Link" inside Instagram or TikTok (works across phone &amp; laptop via Windows Phone Link / Universal Clipboard). ELION detects the link in the background and transcribes it automatically.
+          </span>
+        </div>
+
+        <!-- Live Background Event Log -->
+        <div class="approval-item">
+          <span style="font-weight: 700; font-size: 15px;">Background Daemon Activity Log</span>
+          <div class="code-box" id="daemonLogBox" style="color: #9AA6C7; max-height: 150px; overflow-y: auto; line-height: 1.5;">
+            Waiting for events...
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- BOTTOM NAVIGATION -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('tabInbox', this)">
+        <span>Inbox</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tabLibrary', this)">
+        <span>Library</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tabAsk', this)">
+        <span>Ask</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tabSources', this)">
+        <span>Daemon &amp; Sync</span>
+      </button>
+    </nav>
+
+    <!-- MODAL: APPROVAL QUEUE -->
+    <div class="modal-overlay" id="approvalModal">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <div class="modal-title">Skills Awaiting Approval</div>
+          <button class="close-btn" onclick="closeApprovalModal()">&times;</button>
+        </div>
+        <div id="approvalsList" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div>
+
+    <!-- MODAL: NOTE DETAILS -->
+    <div class="modal-overlay" id="noteDetailModal">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <span class="tag" id="noteDetailTag">TOOL</span>
+          <button class="close-btn" onclick="closeNoteModal()">&times;</button>
+        </div>
+        <h2 id="noteDetailTitle" style="font-size:18px; line-height:1.3;"></h2>
+        <div id="noteDetailMeta" style="font-size:13px; color:var(--text-muted);"></div>
+        <div style="margin-top:10px;">
+          <h4 style="color:var(--accent); font-size:13px; margin-bottom:4px;">SUMMARY</h4>
+          <p id="noteDetailSummary" style="font-size:14px; line-height:1.5; color:#E8ECF8;"></p>
+        </div>
+        <div id="noteDetailStepsBox" style="margin-top:10px;">
+          <h4 style="color:var(--lime); font-size:13px; margin-bottom:4px;">STEPS</h4>
+          <div id="noteDetailSteps" style="font-size:14px; line-height:1.5;"></div>
+        </div>
+        <div style="margin-top:10px;">
+          <h4 style="color:var(--text-muted); font-size:13px; margin-bottom:4px;">FULL TRANSCRIPT</h4>
+          <div id="noteDetailTranscript" style="font-size:13px; line-height:1.5; color:#9AA6C7; background:#080D19; padding:12px; border-radius:10px; max-height:180px; overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentFilter = 'all';
+    let allNotes = [];
+    let pendingApprovals = [];
+
+    async function loadData() {
+      try {
+        const res = await fetch('/api/notes');
+        allNotes = await res.json();
+      } catch (err) { allNotes = []; }
+
+      try {
+        const appRes = await fetch('/api/approvals');
+        pendingApprovals = await appRes.json();
+        const bannerEl = document.getElementById('approvalCountText');
+        if (bannerEl) {
+          bannerEl.textContent = `${pendingApprovals.length} skills need your OK`;
+        }
+      } catch (e) {}
+
+      await refreshDaemonStatus();
+      renderNotes();
+    }
+
+    async function refreshDaemonStatus() {
+      try {
+        const res = await fetch('/api/daemon/status');
+        const st = await res.json();
+        document.getElementById('daemonTaskText').textContent = st.current_task || 'Background Daemon Active';
+        document.getElementById('daemonStatsText').textContent = `${st.queue_size || 0} queued • ${st.total_processed_all_time || 0} saved`;
+
+        if (st.local_ip) {
+          document.getElementById('webhookUrlBox').textContent = `http://${st.local_ip}:8080/api/webhook/save?url=`;
+        }
+
+        const clipBtn = document.getElementById('btnClipboardToggle');
+        if (clipBtn) {
+          clipBtn.textContent = st.clipboard_watcher_active ? 'ACTIVE' : 'PAUSED';
+          clipBtn.style.color = st.clipboard_watcher_active ? '#C6F26A' : '#9AA6C7';
+        }
+
+        const logBox = document.getElementById('daemonLogBox');
+        if (logBox && st.events && st.events.length > 0) {
+          logBox.innerHTML = st.events.map(e => `<div>[${e.time}] ${e.message}</div>`).join('');
+        }
+      } catch (e) {}
+    }
+
+    async function triggerManualSync() {
+      await fetch('/api/daemon/sync', { method: 'POST' });
+      await loadData();
+    }
+
+    async function toggleClipboard() {
+      await fetch('/api/daemon/toggle_clipboard', { method: 'POST' });
+      await refreshDaemonStatus();
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      el.classList.add('active');
+      renderNotes();
+    }
+
+    function setFilter(type, el) {
+      currentFilter = type;
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderNotes();
+    }
+
+    function filterNotes() { renderNotes(); }
+
+    function renderNotes() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const inboxList = document.getElementById('inboxList');
+      const libraryList = document.getElementById('libraryList');
+      inboxList.innerHTML = '';
+      libraryList.innerHTML = '';
+
+      const filtered = allNotes.filter(n => {
+        const matchesFilter = currentFilter === 'all' || (n.type && n.type.toLowerCase() === currentFilter);
+        const matchesQuery = !query ||
+          n.title.toLowerCase().includes(query) ||
+          n.creator.toLowerCase().includes(query) ||
+          (n.transcript && n.transcript.toLowerCase().includes(query)) ||
+          (n.summary && n.summary.toLowerCase().includes(query));
+        return matchesFilter && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        const emptyMsg = '<p style="color: var(--text-muted); padding: 14px 0;">No notes found matching filter.</p>';
+        inboxList.innerHTML = emptyMsg;
+        libraryList.innerHTML = emptyMsg;
+        return;
+      }
+
+      filtered.forEach(note => inboxList.appendChild(createCard(note)));
+      allNotes.forEach(note => libraryList.appendChild(createCard(note)));
+    }
+
+    function createCard(note) {
+      const card = document.createElement('div');
+      card.className = 'note-card';
+      const typeClass = (note.type || 'other').toLowerCase();
+      const displayType = typeClass === 'tool' ? 'Tool' : (typeClass === 'ai' ? 'AI' : 'Other');
+      const snippet = note.summary || note.transcript || '';
+
+      card.innerHTML = `
+        <span class="tag ${typeClass}">${displayType}</span>
+        <span class="note-title">${note.title}</span>
+        <span class="note-meta">${note.creator} • ${note.saved_at}</span>
+        <span class="note-snippet">${snippet.substring(0, 110)}${snippet.length > 110 ? '...' : ''}</span>
+      `;
+      card.onclick = () => openNoteModal(note);
+      return card;
+    }
+
+    function openNoteModal(note) {
+      document.getElementById('noteDetailTitle').textContent = note.title;
+      document.getElementById('noteDetailMeta').textContent = `${note.creator} • Saved on ${note.saved_at}`;
+      document.getElementById('noteDetailSummary').textContent = note.summary || 'Full transcript note';
+      document.getElementById('noteDetailTranscript').textContent = note.transcript;
+
+      const tagEl = document.getElementById('noteDetailTag');
+      tagEl.className = 'tag ' + (note.type || 'other');
+      tagEl.textContent = (note.type || 'other').toUpperCase();
+
+      const stepsContainer = document.getElementById('noteDetailSteps');
+      const stepsBox = document.getElementById('noteDetailStepsBox');
+      if (note.steps && note.steps.length > 0) {
+        stepsBox.style.display = 'block';
+        stepsContainer.innerHTML = note.steps.map(s => `<div>${s}</div>`).join('');
+      } else {
+        stepsBox.style.display = 'none';
+      }
+
+      document.getElementById('noteDetailModal').classList.add('open');
+    }
+
+    function closeNoteModal() { document.getElementById('noteDetailModal').classList.remove('open'); }
+    function openApprovalModal() {
+      renderApprovals();
+      document.getElementById('approvalModal').classList.add('open');
+    }
+    function closeApprovalModal() { document.getElementById('approvalModal').classList.remove('open'); }
+
+    function renderApprovals() {
+      const list = document.getElementById('approvalsList');
+      list.innerHTML = '';
+      if (!pendingApprovals || pendingApprovals.length === 0) {
+        list.innerHTML = '<p style="color:var(--text-muted); padding:10px 0;">No skills awaiting approval.</p>';
+        return;
+      }
+      pendingApprovals.forEach(app => {
+        const item = document.createElement('div');
+        item.className = 'approval-item';
+        item.innerHTML = `
+          <div class="approval-row">
+            <span style="font-weight:700; font-size:16px;">${app.name}</span>
+            <span class="approval-badge">${app.risk_level} RISK</span>
+          </div>
+          <div style="font-size:13px; color:var(--text-muted);">${app.reasons[0] || 'Contains scripts/code'}</div>
+          <div class="approval-actions">
+            <button class="btn-approve" onclick="approveSkill('${app.name}')">Approve &amp; Install</button>
+            <button class="btn-reject" onclick="rejectSkill('${app.name}')">Reject</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function approveSkill(name) {
+      await fetch('/api/approvals/approve', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name})
+      });
+      await loadData();
+      renderApprovals();
+    }
+
+    async function rejectSkill(name) {
+      await fetch('/api/approvals/reject', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name})
+      });
+      await loadData();
+      renderApprovals();
+    }
+
+    async function handleChatSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('chatInput');
+      const q = input.value.trim();
+      if (!q) return;
+
+      const chatBox = document.getElementById('chatMessages');
+      chatBox.innerHTML += `<div class="chat-msg user">${q}</div>`;
+      input.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      chatBox.innerHTML += `<div class="chat-msg jarvis" id="typingMsg">Searching local vault...</div>`;
+
+      try {
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({query: q})
+        });
+        const data = await res.json();
+        document.getElementById('typingMsg').remove();
+        chatBox.innerHTML += `<div class="chat-msg jarvis">${data.answer}</div>`;
+      } catch (err) {
+        document.getElementById('typingMsg').textContent = 'Error querying vault.';
+      }
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    loadData();
+    setInterval(refreshDaemonStatus, 3000);
+    setInterval(loadData, 10000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+[
+  {
+    "id": "reel_mcp_claude",
+    "url": "https://www.instagram.com/reel/C89xYz12345/",
+    "creator": "@alex_tech",
+    "title": "Configuring Model Context Protocol (MCP) in Claude Code",
+    "saved_at": "2026-10-10",
+    "caption": "Here is the exact setup to connect your local notes vault into Claude Code using MCP. Step 1 install gh cli. Step 2 configure mcp server in settings. Step 3 ask /saved to list notes."
+  },
+  {
+    "id": "reel_whisper_cpp",
+    "url": "https://www.instagram.com/reel/C91aBc67890/",
+    "creator": "@david_dev",
+    "title": "Local Audio Transcription with whisper.cpp on Laptop",
+    "saved_at": "2026-10-10",
+    "caption": "Never pay for transcription APIs again. Here is how to run whisper.cpp locally with quantized ggml-base.en model on CPU in under 2 seconds."
+  },
+  {
+    "id": "reel_naval_leverage",
+    "url": "https://www.instagram.com/reel/C92dEf11223/",
+    "creator": "@naval_clips",
+    "title": "Naval Ravikant: Permissionless Leverage in the 21st Century",
+    "saved_at": "2026-10-09",
+    "caption": "Code and media are permissionless leverage. You can write software or create content that works for you while you sleep. Build specific knowledge and embrace accountability."
+  },
+  {
+    "id": "reel_bolt_new",
+    "url": "https://instagram.com/reel/bolt",
+    "creator": "@stackblitz",
+    "title": "Full-Stack Apps with Bolt.new",
+    "caption": "Build full stack web apps directly in the browser with Bolt. Step 1 open bolt.new. Step 2 prompt your app. Step 3 deploy."
+  }
+]
