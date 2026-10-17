@@ -71,9 +71,10 @@ class AudioTranscriber:
     def _find_whisper_bin(self) -> Optional[str]:
         if self.whisper_bin and Path(self.whisper_bin).exists():
             return self.whisper_bin
-        for candidate in ["whisper-cli", "whisper.cpp", "main", "whisper"]:
+        candidates = ["whisper-cli.exe", "whisper-cli", "whisper.exe", "main.exe"] if os.name == "nt" else ["whisper-cli", "whisper.cpp", "main", "whisper"]
+        for candidate in candidates:
             found = shutil.which(candidate)
-            if found:
+            if found and not found.lower().endswith(".cpl"):
                 return found
         return None
 

@@ -56,3 +56,50 @@ Welcome to JARVIS. New video notes transcribed overnight will appear here.
 - **Creator:** @stackblitz
 - **Type:** `other`
 
+
+## 2026-10-16
+
+### [Me at the zoo](notes/save_b0b3835ce5.md)
+- **Creator:** @jawed
+- **Type:** `ai`
+- **Summary:** Microplastics are accumulating in human brains at an alarming rate
+https://www.youtube.com/watch?v=0PT5c1z3LL8
+
+“Nanoplastics and Human Health” with Matthew J Campen, PhD, MSPH
+https://www.youtube.com/watch?v=RRBN_4L09Mg
+
+00:00 Intro
+00:05 The cool thing
+00:17 End Microplastics are accumulating in human brains at an alarming rate
+https://www.youtube.com/watch?v=0PT5c1z3LL8
+
+“Nanoplastics and Human Health” with Matthew J Campen, PhD, MSPH
+https://www.youtube.com/watch?v=RRBN_4L09Mg
+
+00:00 Intro
+00:05 The cool thing
+00:17 End.
+
+
+## 2026-10-17
+
+### [Does Running Like Naruto Make You Faster? 🤨](notes/save_89cf3c162d.md)
+- **Creator:** @Zack D. Films
+- **Type:** `other`
+- **Summary:** Does Running Like Naruto Make You Faster? 🤨 Does Running Like Naruto Make You Faster?
+
+### [The Bullet That Landed Under Her Pillow 😵](notes/save_5e6317d26d.md)
+- **Creator:** @Zack D. Films
+- **Type:** `other`
+- **Summary:** The Bullet That Landed Under Her Pillow 😵 The Bullet That Landed Under Her Pillow 😵.
+
+### [Gon Figures Out the Coin Game | Hunter x Hunter #shorts](notes/save_5625b2a3d2.md)
+- **Creator:** @ANIVARO
+- **Type:** `other`
+- **Summary:** Gon Figures Out the Coin Game | Hunter x Hunter #shorts Gon Figures Out the Coin Game | Hunter x Hunter #shorts.
+
+### [Why Airbending Looks So Weak in Seven Havens 😭💔](notes/save_3f3b0be03f.md)
+- **Creator:** @Facts Fate
+- **Type:** `ai`
+- **Summary:** Why Airbending Looks So Weak in Seven Havens 😭💔 Why Airbending Looks So Weak in Seven Havens 😭💔.
+

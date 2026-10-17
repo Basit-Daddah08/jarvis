@@ -9,6 +9,10 @@ __pycache__/
 venv/
 ENV/
 
+# Runtime state and local machine identifiers
+state/
+*.pid
+
 # Temporary media files (audio-only, deleted after transcribe)
 tmp/
 *.mp4

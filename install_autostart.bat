@@ -1,12 +1,15 @@
 @echo off
-REM Installs ELION / JARVIS to run automatically in the background whenever Windows starts.
+setlocal
 cd /d "%~dp0"
-set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
-copy /Y "%~dp0start_elion_background.vbs" "%STARTUP_DIR%\ELION_Background_Daemon.vbs" >nul
-cscript //nologo "%~dp0start_elion_background.vbs"
-echo ====================================================================
-echo [SUCCESS] ELION Background Software is now running in the background
-echo and registered to start automatically whenever you turn on your laptop.
-echo Control Center: http://localhost:8080
-echo ====================================================================
+echo ============================================================
+echo   ELION (JARVIS) — Enable Auto-Start on Windows Login
+echo ============================================================
+echo.
+call elion.bat autostart enable
+echo.
+echo Starting ELION in the background now...
+cscript //nologo start_elion_background.vbs
+echo.
+call elion.bat status
+echo.
 pause

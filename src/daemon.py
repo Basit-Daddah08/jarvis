@@ -9,7 +9,7 @@ import time
 import tomllib
 from datetime import date, datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set, Tuple
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -54,7 +54,7 @@ class ElionDaemon:
         self.transcriber = AudioTranscriber(
             model_name=self.config.get("transcribe", {}).get("model", "base.en")
         )
-        self.classifier = VideoClassifier(state_manager=self.state_mgr)
+        self.classifier = VideoClassifier(state_manager=self.state_mgr, config=self.config)
         self.skill_checker = SkillChecker(
             approvals_dir=self.vault_dir / "approvals",
             queue_all_by_default=self.config.get("safety", {}).get("queue_markdown_skills", True)
@@ -81,9 +81,11 @@ class ElionDaemon:
         self.status = "running"
         self.processed_this_session = 0
         self.events: List[Dict[str, str]] = []
+        self.queued_ids: Set[str] = set()
 
         self.clipboard_enabled = self.config.get("daemon", {}).get("watch_clipboard", True)
         self.clipboard_watcher = ClipboardWatcher(on_url_detected=self._on_clipboard_url)
+        self.clipboard_watcher.enabled = self.clipboard_enabled
 
     def _load_config(self) -> dict:
         cfg_path = PROJECT_ROOT / "config.toml"
@@ -112,8 +114,13 @@ class ElionDaemon:
             "total_processed_all_time": len(self.state_mgr.processed_ids),
             "clipboard_watcher_active": self.clipboard_enabled,
             "instagram_sync_configured": bool(self.ig_adapter.session_id and self.ig_adapter.username),
-            "local_ip": self.get_local_ip(),
-            "events": self.events[:15]
+            "bind_address": self.config.get("daemon", {}).get("bind_address", "127.0.0.1"),
+            "allow_tailscale": self.config.get("daemon", {}).get("allow_tailscale", False),
+            "phone_share_enabled": getattr(self, "phone_share_enabled", True),
+            "ai_provider": self.config.get("ai", {}).get("provider", "claude"),
+            "spend_data": self.state_mgr.get_today_spend(),
+            "errors": [e for e in self.events if e.get("level") in ("ERROR", "WARNING")],
+            "events": self.events[:25]
         }
         try:
             with open(self.status_file, "w", encoding="utf-8") as f:
@@ -121,38 +128,69 @@ class ElionDaemon:
         except Exception:
             pass
 
-    @staticmethod
-    def get_local_ip() -> str:
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.connect(("8.8.8.8", 80))
-            ip = s.getsockname()[0]
-            s.close()
-            return ip
-        except Exception:
-            return "127.0.0.1"
+    def get_local_ip(self) -> str:
+        """Returns the bind host or Tailscale IP if enabled, defaulting to 127.0.0.1."""
+        return "127.0.0.1"
 
-    def enqueue_url(self, url: str, creator: str = "", title: str = "", caption: str = "", source: str = "mobile_share") -> str:
+    def is_duplicate(self, url: str, caption: str = "") -> Tuple[bool, str]:
         """
-        Immediately enqueue a video URL for background downloading & Whisper transcription.
-        Returns in <5ms so mobile share sheets never block or switch apps.
+        Check if URL or content is already processed or currently pending in the work queue.
+        Returns (is_duplicate: bool, item_id: str).
         """
-        url = url.strip()
-        item_id = "save_" + hashlib.md5((url or caption).encode("utf-8")).hexdigest()[:10]
+        from src.fetch.url_validator import normalize_video_url
+        clean_url = normalize_video_url(url) if url else ""
+        item_id = "save_" + hashlib.md5((clean_url or caption or url).encode("utf-8")).hexdigest()[:10]
+
+        if item_id in self.queued_ids:
+            return True, item_id
+        if self.state_mgr.is_processed(item_id):
+            return True, item_id
+
+        return False, item_id
+
+    def enqueue_url_safe(
+        self,
+        url: str,
+        creator: str = "",
+        title: str = "",
+        caption: str = "",
+        source: str = "mobile_share"
+    ) -> Tuple[bool, bool, str]:
+        """
+        De-duplicates and enqueues a video URL for background Whisper transcription.
+        Returns: (queued: bool, duplicate: bool, item_id: str)
+        """
+        is_dup, item_id = self.is_duplicate(url, caption)
+        if is_dup:
+            self.log_event(f"Ignored duplicate save [{item_id}] from {source}: {url or title}")
+            return False, True, item_id
+
+        self.queued_ids.add(item_id)
         self.work_queue.put({
             "id": item_id,
-            "url": url,
+            "url": url.strip(),
             "creator": creator,
             "title": title,
             "caption": caption,
             "source": source
         })
         self.log_event(f"Queued new video from {source}: {url or title}")
+        return True, False, item_id
+
+    def enqueue_url(self, url: str, creator: str = "", title: str = "", caption: str = "", source: str = "mobile_share") -> str:
+        """Compatibility wrapper: Enqueues URL and returns item_id."""
+        _, _, item_id = self.enqueue_url_safe(url=url, creator=creator, title=title, caption=caption, source=source)
         return item_id
 
+    def toggle_clipboard(self) -> bool:
+        """Toggle clipboard watcher active state and update watcher instance."""
+        self.clipboard_enabled = not self.clipboard_enabled
+        self.clipboard_watcher.enabled = self.clipboard_enabled
+        self.log_event(f"Clipboard auto-watcher {'enabled' if self.clipboard_enabled else 'paused'}.")
+        return self.clipboard_enabled
+
     def _on_clipboard_url(self, url: str):
-        if not self.state_mgr.is_processed("save_" + hashlib.md5(url.encode("utf-8")).hexdigest()[:10]):
-            self.enqueue_url(url=url, source="clipboard_auto_capture")
+        self.enqueue_url_safe(url=url, source="clipboard_auto_capture")
 
     def process_video_item(self, item: VideoItem, source_label: str = "background"):
         """Full background pipeline for a single VideoItem: Transcribe -> Classify -> Skill Check -> Write Note."""
@@ -203,13 +241,15 @@ class ElionDaemon:
             steps=classification.steps
         )
 
-        # 5. Mark processed & delete temporary audio file (Rule 8: Audio only, never keep media)
+        # 5. Mark processed & delete temporary audio file (unless share_to_download kept the full video)
         self.state_mgr.mark_processed(item.id)
         self.processed_this_session += 1
         self.last_sync_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        if item.audio_path and Path(item.audio_path).exists():
-            if "drop" not in str(item.audio_path):
+        cleanup_audio = self.config.get("fetch", {}).get("cleanup_audio_after_transcription", True)
+        if cleanup_audio and item.audio_path and Path(item.audio_path).exists():
+            is_saved_video = item.video_path and Path(item.audio_path).resolve() == Path(item.video_path).resolve()
+            if "drop" not in str(item.audio_path) and not is_saved_video:
                 try:
                     Path(item.audio_path).unlink()
                 except Exception:
@@ -236,7 +276,16 @@ class ElionDaemon:
                         self.status = "downloading_audio"
                         self.current_task = f"Extracting audio from {url[:45]}..."
                         self._write_status()
-                        extracted = self.extractor.extract_audio_and_metadata(url)
+
+                        # Check share_to_download setting (defaults to False)
+                        share_to_download = bool(self.config.get("fetch", {}).get("share_to_download_enabled", False))
+                        downloads_dir = self.vault_dir / "downloads" if share_to_download else None
+
+                        extracted = self.extractor.extract_audio_and_metadata(
+                            url=url,
+                            download_video=share_to_download,
+                            downloads_dir=downloads_dir
+                        )
                         extracted.id = job["id"]
                         if title:
                             extracted.title = title
@@ -253,6 +302,7 @@ class ElionDaemon:
                         )
 
                     self.process_video_item(item, source_label=job.get("source", "queue"))
+                    self.queued_ids.discard(job["id"])
                     self.work_queue.task_done()
 
                 # 2. Check drop folder for new files/manifests

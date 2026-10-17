@@ -1,0 +1,9 @@
+# ELION (JARVIS) Core Dependencies
+# Pinned versions for reproducible installation
+yt-dlp==2026.8.19
+instaloader==4.15.3
+requests==2.34.2
+urllib3==2.8.0
+charset-normalizer==3.5.2
+certifi==2026.4.22
+idna==3.13

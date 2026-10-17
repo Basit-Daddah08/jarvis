@@ -12,14 +12,22 @@ drop_dir = "vault/drop"
 [daemon]
 # Port for the local control center & silent mobile share webhook
 port = 8080
+# Network binding: 127.0.0.1 by default so the server is never exposed to the whole network
+bind_address = "127.0.0.1"
+# Optional: Set to true to also permit access from your Tailscale interface (100.64.0.0/10)
+allow_tailscale = false
 # Automatically detect video/reel links copied to clipboard (including Windows Phone Link cross-device clipboard)
 watch_clipboard = true
+# Enable phone share / webhook endpoint
+phone_share_enabled = true
+# Enable automatic Instagram background polling
+instagram_sync_enabled = true
 # Interval (in minutes) to check Instagram Saved folder in the background when credentials are set in .env
-instagram_poll_minutes = 30
+instagram_poll_minutes = 45
 
 [limits]
 # Daily spending cap for paid AI calls (USD)
-daily_spend_cap_usd = 1.00
+daily_spend_cap_usd = 2.5
 # Maximum items to fetch per batch
 max_items_per_batch = 10
 # Delay between Instagram fetches in seconds (min, max) to respect rate limits
@@ -33,6 +41,9 @@ active_adapter = "manual_drop"
 browser_cookies = "none"
 # Delete raw audio immediately after Whisper transcription (Audio-only, never stores videos)
 cleanup_audio_after_transcription = true
+# Share-to-download: Auto-download full video to vault/downloads/ when a link is shared (Default: false)
+share_to_download_enabled = false
+downloads_dir = "vault/downloads"
 
 [transcribe]
 # Local transcription engine: "whisper_cpp", "faster_whisper", or "python_whisper"
@@ -44,3 +55,11 @@ language = "en"
 # Quarantine all skills in vault/approvals/ until reviewed by owner
 queue_markdown_skills = true
 queue_code_skills = true
+
+[ai]
+provider = "claude"
+claude_model = "claude-3-5-haiku-latest"
+openai_model = "gpt-4o-mini"
+gemini_model = "gemini-1.5-flash"
+ollama_endpoint = "http://localhost:11434"
+ollama_model = "llama3.2"

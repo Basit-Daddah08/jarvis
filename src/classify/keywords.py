@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass, field
 from typing import List, Optional
+from .summarizer import ExtractiveTranscriptSummarizer
 
 @dataclass
 class ClassificationResult:
@@ -93,22 +94,22 @@ def classify_by_keywords(text: str, caption: str = "") -> ClassificationResult:
 
     # Strong AI indicator
     if ai_score >= 2 and tool_score >= 1:
-        steps = extract_heuristic_steps(text)
+        real_sum, steps = ExtractiveTranscriptSummarizer.summarize(text, caption=caption)
         return ClassificationResult(
             category="ai",
             confidence=0.85,
-            summary="AI tool and workflow overview.",
+            summary=real_sum,
             steps=steps,
             tools=tools,
             links=links,
             source="keyword"
         )
     elif tool_score >= 3:
-        steps = extract_heuristic_steps(text)
+        real_sum, steps = ExtractiveTranscriptSummarizer.summarize(text, caption=caption)
         return ClassificationResult(
             category="tool",
             confidence=0.85,
-            summary="Developer tool installation and usage.",
+            summary=real_sum,
             steps=steps,
             tools=tools,
             links=links,

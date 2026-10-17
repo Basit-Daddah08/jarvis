@@ -10,7 +10,7 @@ links: []
 # Configuring Model Context Protocol (MCP) in Claude Code
 
 ## Summary
-Developer tool installation and usage.
+Here is the exact setup to connect your local notes vault into Claude Code using MCP.
 
 ## Steps
 1. Step 1 install gh cli.

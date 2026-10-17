@@ -77,6 +77,27 @@ class StateManager:
         self.spend_data["calls_count"] = self.spend_data.get("calls_count", 0) + 1
         self._save_spend()
 
+    def get_today_spend(self) -> dict:
+        today_str = date.today().isoformat()
+        if self.spend_data.get("date") != today_str:
+            self.spend_data = {
+                "date": today_str,
+                "spent_usd": 0.0,
+                "daily_cap_usd": self.spend_data.get("daily_cap_usd", 1.00),
+                "calls_count": 0,
+            }
+            self._save_spend()
+        return self.spend_data
+
+    @property
+    def daily_spend_cap(self) -> float:
+        return float(self.spend_data.get("daily_cap_usd", 1.00))
+
+    @daily_spend_cap.setter
+    def daily_spend_cap(self, value: float):
+        self.spend_data["daily_cap_usd"] = float(value)
+        self._save_spend()
+
     def _save_spend(self):
         with open(self.spend_file, "w", encoding="utf-8") as f:
             json.dump(self.spend_data, f, indent=2)

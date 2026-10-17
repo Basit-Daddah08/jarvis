@@ -10,11 +10,10 @@ links: []
 # Naval Ravikant: Permissionless Leverage in the 21st Century
 
 ## Summary
-Technical walkthrough discussing Naval Ravikant: Permissionless Leverage in the 21st Century.
+Code and media are permissionless leverage where you can write software or create content that works for you while you sleep.
 
 ## Steps
-1. Review instructions in video
-2. Implement configuration
+1. Build specific knowledge and embrace accountability.
 
 ## Transcript
 Code and media are permissionless leverage. You can write software or create content that works for you while you sleep. Build specific knowledge and embrace accountability.

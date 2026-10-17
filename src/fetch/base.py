@@ -12,6 +12,7 @@ class VideoItem:
     title: str = ""
     saved_at: str = field(default_factory=lambda: date.today().isoformat())
     audio_path: Optional[Path] = None
+    video_path: Optional[Path] = None
     raw_caption: str = ""
     platform: str = "instagram"
 

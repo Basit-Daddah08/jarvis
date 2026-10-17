@@ -3,480 +3,1056 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#080D19">
+  <meta name="theme-color" content="#080A0F">
   <title>ELION / JARVIS — Private Background Vault</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap">
   <style>
     :root {
-      --bg-canvas: #080D19;
-      --bg-header: #0D1426;
-      --bg-card: #121A2E;
-      --border-card: #263050;
-      --border-input: #2F3A66;
-      --text-main: #E8ECF8;
-      --text-muted: #9AA6C7;
-      --accent: #7C93FF;
-      --lime: #C6F26A;
-      --tag-tool-bg: #1E2A5A;
-      --tag-tool-text: #AFC0FF;
-      --tag-other-bg: #14352C;
-      --tag-other-text: #8FE0C4;
-      --danger: #FF5A5F;
+      --bg-canvas: #080A0F;
+      --bg-surface-1: #0D101C;
+      --bg-surface-2: #121626;
+      --bg-surface-3: #161C30;
+      --border-subtle: #1B2236;
+      --border-focus: #2E3A5A;
+      --border-active: #3D4F7C;
+      --text-main: #E2E6F0;
+      --text-muted: #7E8B9F;
+      --text-dim: #546078;
+      --accent: #7896FF;
+      --status-ok: #10B981;
+      --status-warn: #F5D061;
+      --status-err: #FF5A5F;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     body {
       background: var(--bg-canvas);
       color: var(--text-main);
-      font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      overflow-x: hidden;
-    }
-    .app-container {
-      width: 100%;
-      max-width: 560px;
+      font-family: var(--font-sans);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      background: var(--bg-canvas);
-      box-shadow: 0 0 60px rgba(0,0,0,0.65);
-      border-left: 1px solid #121A2E;
-      border-right: 1px solid #121A2E;
-      position: relative;
+      overflow-x: hidden;
+      font-size: 13px;
+      line-height: 1.5;
     }
-    header {
-      background: var(--bg-header);
-      padding: 16px 20px;
+
+    .mono { font-family: var(--font-mono); }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+
+    /* Layout Shell: Mobile Default (< 768px) */
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      width: 100%;
+      position: relative;
+      padding-bottom: 60px; /* space for mobile bottom nav */
+    }
+
+    /* Desktop Sidebar Rail (Hidden on Mobile/Tablet) */
+    .desktop-sidebar {
+      display: none;
+    }
+
+    /* Tablet Header Nav (Hidden on Mobile) */
+    .tablet-nav {
+      display: none;
+    }
+
+    /* Main Content Wrapper */
+    .content-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Mobile Header */
+    header.mobile-header {
+      background: var(--bg-surface-1);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 12px 16px;
       position: sticky;
       top: 0;
-      z-index: 10;
-      border-bottom: 1px solid var(--border-card);
+      z-index: 20;
     }
-    .header-top {
+
+    .header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      gap: 12px;
     }
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-    }
-    .brand svg path { stroke: var(--accent); }
-    .brand-badge {
-      font-size: 11px;
-      font-weight: 700;
-      background: #1E2A5A;
-      color: #AFC0FF;
-      padding: 3px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.4px;
-    }
-    .daemon-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #0A0F1C;
-      border: 1px solid #1F2947;
-      border-radius: 10px;
-      padding: 8px 12px;
-      margin-bottom: 12px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-    .daemon-indicator {
+
+    .brand-mark {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-weight: 600;
-      color: #E8ECF8;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+      color: #fff;
     }
-    .pulse-dot {
+
+    .brand-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: var(--lime);
-      box-shadow: 0 0 8px var(--lime);
-      animation: pulse 2s infinite;
+      background: var(--status-ok);
+      display: inline-block;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.45; transform: scale(1.15); }
+
+    .brand-dot.paused {
+      background: var(--status-warn);
+    }
+
+    .brand-tag {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      background: var(--bg-surface-3);
+      color: var(--accent);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-action:hover {
+      background: var(--bg-surface-3);
+      border-color: var(--border-focus);
+    }
+    .btn-action.primary {
+      background: var(--bg-surface-3);
+      color: var(--accent);
+      border-color: var(--border-focus);
+    }
+
+    /* Status & Spend Banner */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 6px 10px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .spend-badge {
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Search Bar */
+    .search-wrapper {
+      margin-top: 10px;
+      position: relative;
     }
     .search-input {
       width: 100%;
-      min-height: 44px;
-      border-radius: 10px;
-      border: 1px solid var(--border-input);
-      background: #0A0F1C;
-      color: #fff;
-      padding: 0 14px;
-      font-size: 15px;
-      outline: none;
+      height: 36px;
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 0 12px;
+      color: var(--text-main);
+      font-size: 13px;
       font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
     }
-    .search-input:focus { border-color: var(--accent); }
+    .search-input:focus {
+      border-color: var(--border-active);
+    }
+    .search-input::placeholder {
+      color: var(--text-dim);
+    }
 
-    main {
-      flex: 1;
-      padding: 18px 20px 88px 20px;
+    /* Screen Tab Content */
+    main.main-body {
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
+      gap: 14px;
+      flex: 1;
     }
-    .tab-content { display: none; }
-    .tab-content.active { display: flex; flex-direction: column; gap: 16px; }
 
-    /* Approval Banner */
-    .approval-banner {
-      color: #0A0F1C;
-      background: var(--lime);
-      border-radius: 14px;
-      padding: 14px 16px;
+    .tab-view {
+      display: none;
     }
-    .approval-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-bottom: 10px;
-    }
-    .approval-btn {
-      width: 100%;
-      background: #0D1426;
-      color: #fff;
-      border: 0;
-      border-radius: 10px;
-      min-height: 48px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
+    .tab-view.active {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
     }
 
     /* Filter Chips */
     .filter-chips {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       overflow-x: auto;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
     }
-    .filter-chips::-webkit-scrollbar { display: none; }
     .chip {
-      flex: none;
-      background: var(--bg-card);
-      color: var(--text-main);
-      border: 1px solid var(--border-card);
-      border-radius: 999px;
-      padding: 0 18px;
-      min-height: 44px;
-      font-size: 14px;
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
     }
     .chip.active {
-      background: var(--text-main);
-      color: #0A0F1C;
-      border-color: var(--text-main);
+      background: var(--bg-surface-3);
+      color: #fff;
+      border-color: var(--border-active);
     }
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
+
+    /* Approval Notification Banner */
+    .approval-alert {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--status-warn);
+      border-left: 3px solid var(--status-warn);
+      border-radius: 6px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
+    }
+    .approval-alert-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--status-warn);
     }
 
-    /* Note Cards */
-    .notes-list {
+    /* Section Headers */
+    .section-header {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .note-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-card);
-      border-radius: 14px;
-      padding: 16px;
-      cursor: pointer;
-      transition: border-color 0.15s;
-    }
-    .note-card:hover { border-color: var(--accent); }
-    .tag {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 4px 10px;
-      border-radius: 999px;
-      margin-bottom: 8px;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    .tag.tool, .tag.ai {
-      background: var(--tag-tool-bg);
-      color: var(--tag-tool-text);
-    }
-    .tag.other {
-      background: var(--tag-other-bg);
-      color: var(--tag-other-text);
-    }
-    .note-title {
-      display: block;
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.35;
-      margin-bottom: 6px;
-    }
-    .note-meta {
-      display: block;
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-    .note-snippet {
-      display: block;
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
 
-    /* Ask Tab */
-    .chat-container {
+    /* Cards & Lists */
+    .notes-list {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 230px);
-    }
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding-bottom: 12px;
-    }
-    .chat-msg {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 16px;
-      font-size: 15px;
-      line-height: 1.45;
-    }
-    .chat-msg.user {
-      align-self: flex-end;
-      background: var(--accent);
-      color: #0A0F1C;
-      font-weight: 600;
-      border-bottom-right-radius: 4px;
-    }
-    .chat-msg.jarvis {
-      align-self: flex-start;
-      background: var(--bg-card);
-      border: 1px solid var(--border-card);
-      color: var(--text-main);
-      border-bottom-left-radius: 4px;
-    }
-    .chat-input-row {
-      display: flex;
       gap: 8px;
-      padding-top: 10px;
-    }
-    .chat-input {
-      flex: 1;
-      min-height: 48px;
-      border-radius: 12px;
-      border: 1px solid var(--border-input);
-      background: #0A0F1C;
-      color: #fff;
-      padding: 0 16px;
-      font-size: 15px;
-      outline: none;
-    }
-    .chat-send-btn {
-      background: var(--accent);
-      color: #0A0F1C;
-      border: 0;
-      border-radius: 12px;
-      padding: 0 18px;
-      font-weight: 700;
-      cursor: pointer;
     }
 
-    /* Bottom Navigation */
-    nav.bottom-nav {
-      background: var(--bg-card);
-      border-top: 1px solid var(--border-card);
-      display: flex;
-      justify-content: space-around;
-      padding: 8px 8px 18px;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      max-width: 560px;
-      z-index: 20;
-    }
-    .nav-item {
-      background: none;
-      border: 0;
-      color: var(--text-muted);
-      min-height: 48px;
-      min-width: 68px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
+    .note-card {
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
+      gap: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
     }
-    .nav-item.active {
-      color: var(--accent);
-      font-weight: 800;
+    .note-card:hover {
+      border-color: var(--border-focus);
+      background: var(--bg-surface-2);
+    }
+    .note-card.selected {
+      border-color: var(--accent);
+      border-left: 3px solid var(--accent);
+      background: var(--bg-surface-2);
     }
 
-    /* Modals */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      backdrop-filter: blur(4px);
-      z-index: 50;
-      align-items: flex-end;
-      justify-content: center;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal-sheet {
-      width: 100%;
-      max-width: 560px;
-      background: #0D1426;
-      border-top: 1px solid var(--border-card);
-      border-radius: 20px 20px 0 0;
-      padding: 24px 20px 32px;
-      max-height: 85vh;
-      overflow-y: auto;
+    .card-top {
       display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tag-pill {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .tag-pill.tool { background: #151D33; color: var(--accent); border: 1px solid #202D52; }
+    .tag-pill.ai { background: #1B261D; color: var(--status-ok); border: 1px solid #233B29; }
+    .tag-pill.other { background: #1F222D; color: var(--text-muted); border: 1px solid #2D3345; }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: #fff;
+    }
+    .card-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .card-summary {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Master-Detail Split Pane (Tablet & Desktop) */
+    .master-detail-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    .detail-inspector {
+      display: none; /* hidden on mobile; populated on tablet/desktop */
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 18px;
       flex-direction: column;
       gap: 16px;
+      overflow-y: auto;
     }
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .modal-title { font-size: 18px; font-weight: 800; }
-    .close-btn {
-      background: none;
-      border: 0;
+
+    .detail-section-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       color: var(--text-muted);
-      font-size: 22px;
-      cursor: pointer;
-      padding: 4px;
+      margin-bottom: 6px;
     }
-    .approval-item {
-      background: var(--bg-card);
-      border: 1px solid var(--border-card);
-      border-radius: 12px;
-      padding: 15px;
+
+    .detail-box {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-main);
+    }
+
+    .detail-box.mono {
+      font-family: var(--font-mono);
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 220px;
+      overflow-y: auto;
+      color: var(--text-muted);
+    }
+
+    /* Settings Groups */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .settings-panel {
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .settings-panel-title {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 8px;
+    }
+
+    .setting-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .setting-meta {
+      flex: 1;
+    }
+
+    .setting-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .setting-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 2px;
+    }
+
+    .input-text, .input-select {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .input-text:focus, .input-select:focus {
+      border-color: var(--border-active);
+    }
+    .input-text.number {
+      width: 80px;
+      text-align: right;
+    }
+
+    /* Minimal Toggle Switch */
+    .toggle {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: var(--bg-surface-3);
+      border: 1px solid var(--border-subtle);
+      border-radius: 22px;
+      transition: 0.2s;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background: var(--text-dim);
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    input:checked + .toggle-slider {
+      background: var(--status-ok);
+      border-color: var(--status-ok);
+    }
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background: #080A0F;
+    }
+
+    .btn-save {
+      background: var(--bg-surface-3);
+      border: 1px solid var(--border-focus);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-save:hover {
+      background: #1C243B;
+      border-color: var(--accent);
+    }
+
+    /* Daemon & Logs */
+    .panel-block {
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .approval-row {
+
+    .badge-status {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .badge-status.ok { background: #13271D; color: var(--status-ok); border: 1px solid #1D402F; }
+    .badge-status.warn { background: #2B2414; color: var(--status-warn); border: 1px solid #483B1E; }
+    .badge-status.err { background: #2D1418; color: var(--status-err); border: 1px solid #4F2228; }
+
+    .code-display {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      word-break: break-all;
+      user-select: all;
+    }
+
+    /* Skill Approval Items */
+    .approval-card {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .approval-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .btn-approve {
+      background: #13271D;
+      border: 1px solid var(--status-ok);
+      color: var(--status-ok);
+      font-weight: 700;
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-approve:hover { background: #1A3829; }
+    .btn-reject {
+      background: #2D1418;
+      border: 1px solid var(--status-err);
+      color: var(--status-err);
+      font-weight: 700;
+      font-size: 11px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-reject:hover { background: #3E1B21; }
+
+    /* Ask MCP Chat View */
+    .chat-layout {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 210px);
+    }
+    .chat-stream {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 10px;
+    }
+    .bubble {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .bubble.user {
+      align-self: flex-end;
+      background: var(--bg-surface-3);
+      border: 1px solid var(--border-focus);
+      color: #fff;
+    }
+    .bubble.jarvis {
+      align-self: flex-start;
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+    .chat-bar {
+      display: flex;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    /* Mobile Bottom Navigation Bar */
+    nav.mobile-bottom-nav {
+      background: var(--bg-surface-1);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      z-index: 40;
+    }
+    .nav-btn {
+      background: none;
+      border: 0;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      font-family: inherit;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color 0.15s;
+    }
+    .nav-btn.active {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    /* Modal Overlay (Mobile Note Sheet & Setup Assistant) */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(2px);
+      z-index: 50;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      background: var(--bg-surface-1);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 10px;
+    }
+    .modal-close-btn {
+      background: none;
+      border: 0;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* Wizard Indicator */
+    .wizard-steps {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .wizard-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border-subtle);
+      transition: all 0.2s;
+    }
+    .wizard-dot.active {
+      background: var(--accent);
+      width: 20px;
+      border-radius: 4px;
+    }
+    .wizard-dot.completed {
+      background: var(--status-ok);
+    }
+    .wizard-step {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .wizard-step.active {
+      display: flex;
+    }
+    .wizard-nav {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
     }
-    .approval-badge {
-      background: #FF5A5F;
-      color: #fff;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
+
+    /* =====================================================================
+       RESPONSIVE BREAKPOINT: TABLET (768px – 1024px)
+       ===================================================================== */
+    @media (min-width: 768px) and (max-width: 1023px) {
+      .app-shell {
+        padding-bottom: 0; /* no bottom nav on tablet */
+      }
+
+      /* Hide mobile bottom nav */
+      nav.mobile-bottom-nav {
+        display: none;
+      }
+
+      /* Tablet Top Navigation Bar */
+      header.mobile-header {
+        padding: 12px 24px;
+      }
+      .tablet-nav {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-top: 12px;
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 10px;
+      }
+      .tablet-nav-link {
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        padding-bottom: 2px;
+        transition: color 0.15s;
+      }
+      .tablet-nav-link.active {
+        color: #fff;
+        border-bottom: 2px solid var(--accent);
+      }
+
+      main.main-body {
+        padding: 20px 24px;
+      }
+
+      /* Tablet Dual-Pane: Left 320px list + Right inspector */
+      .master-detail-container {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 16px;
+        height: calc(100vh - 190px);
+      }
+      .master-list-col {
+        width: 320px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-right: 4px;
+      }
+      .detail-inspector {
+        display: flex;
+        flex: 1;
+        height: 100%;
+      }
+
+      /* Tablet 2-column settings */
+      .settings-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
-    .approval-actions { display: flex; gap: 8px; }
-    .btn-approve {
-      flex: 1;
-      background: var(--lime);
-      color: #0A0F1C;
-      border: 0;
-      border-radius: 8px;
-      min-height: 42px;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .btn-reject {
-      flex: 1;
-      background: #263050;
-      color: #FF5A5F;
-      border: 0;
-      border-radius: 8px;
-      min-height: 42px;
-      font-weight: 700;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .code-box {
-      background: #080D19;
-      border: 1px solid #263050;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-family: monospace;
-      font-size: 12px;
-      color: var(--lime);
-      word-break: break-all;
-    }
-    .btn-small {
-      background: #1E2A5A;
-      color: #AFC0FF;
-      border: 1px solid #2F3A66;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
+
+    /* =====================================================================
+       RESPONSIVE BREAKPOINT: DESKTOP (> 1024px)
+       ===================================================================== */
+    @media (min-width: 1024px) {
+      body {
+        flex-direction: row;
+      }
+
+      .app-shell {
+        flex-direction: row;
+        padding-bottom: 0;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      /* Hide mobile top header and bottom nav */
+      header.mobile-header, nav.mobile-bottom-nav {
+        display: none;
+      }
+
+      /* Permanent Studio Left Rail */
+      .desktop-sidebar {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        width: 230px;
+        background: var(--bg-surface-1);
+        border-right: 1px solid var(--border-subtle);
+        padding: 16px;
+        flex-shrink: 0;
+        height: 100vh;
+      }
+
+      .desktop-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 15px;
+        color: #fff;
+        padding: 0 4px;
+        margin-bottom: 20px;
+      }
+
+      .desktop-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .desktop-nav-link {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-radius: 6px;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .desktop-nav-link:hover {
+        background: var(--bg-surface-2);
+        color: var(--text-main);
+      }
+      .desktop-nav-link.active {
+        background: var(--bg-surface-3);
+        color: #fff;
+        border-left: 2px solid var(--accent);
+      }
+
+      .desktop-sidebar-footer {
+        border-top: 1px solid var(--border-subtle);
+        padding-top: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* Content Area Desktop Header */
+      .desktop-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 24px;
+        border-bottom: 1px solid var(--border-subtle);
+        background: var(--bg-surface-1);
+        height: 52px;
+      }
+
+      main.main-body {
+        padding: 20px 24px;
+        overflow-y: auto;
+        height: calc(100vh - 52px);
+      }
+
+      /* Desktop Master-Detail Studio Layout */
+      .master-detail-container {
+        flex-direction: row;
+        align-items: stretch;
+        gap: 20px;
+        height: calc(100vh - 120px);
+      }
+      .master-list-col {
+        width: 360px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding-right: 6px;
+      }
+      .detail-inspector {
+        display: flex;
+        flex: 1;
+        height: 100%;
+      }
+
+      /* Desktop Settings 2-Column Grid */
+      .settings-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <header>
-      <div class="header-top">
-        <div class="brand">
-          <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-            <path d="M3 4h16M3 11h16M3 18h10" stroke-width="3" stroke-linecap="round" fill="none"></path>
-          </svg>
-          <span>ELION / JARVIS</span>
-          <span class="brand-badge">LAPTOP DAEMON</span>
-        </div>
-        <button class="btn-small" onclick="triggerManualSync()">Sync Now</button>
+
+  <!-- DESKTOP LEFT SIDEBAR RAIL (> 1024px) -->
+  <aside class="desktop-sidebar">
+    <div>
+      <div class="desktop-brand">
+        <span class="brand-dot" id="desktopDot"></span>
+        <span>ELION</span>
+        <span class="brand-tag">VAULT</span>
       </div>
 
-      <!-- Live Background Daemon Status Bar -->
-      <div class="daemon-bar">
-        <div class="daemon-indicator">
-          <span class="pulse-dot" id="daemonDot"></span>
-          <span id="daemonTaskText">Background Daemon Active • Watching Saves</span>
+      <nav class="desktop-nav">
+        <div class="desktop-nav-link active" onclick="switchTab('tabInbox', this)">
+          <span>Today's Inbox</span>
+          <span class="mono text-xs text-muted" id="desktopInboxCount">0</span>
         </div>
-        <span id="daemonStatsText">0 queued</span>
+        <div class="desktop-nav-link" onclick="switchTab('tabLibrary', this)">
+          <span>Vault Library</span>
+          <span class="mono text-xs text-muted" id="desktopLibraryCount">0</span>
+        </div>
+        <div class="desktop-nav-link" onclick="switchTab('tabAsk', this)">
+          <span>Ask Vault (MCP)</span>
+        </div>
+        <div class="desktop-nav-link" onclick="switchTab('tabDaemon', this)">
+          <span>Daemon &amp; Logs</span>
+        </div>
+        <div class="desktop-nav-link" onclick="switchTab('tabApprovalsScreen', this)">
+          <span>Skill Approvals</span>
+          <span class="badge-status warn" id="desktopApprovalBadge" style="display:none;">0</span>
+        </div>
+        <div class="desktop-nav-link" onclick="switchTab('tabSettings', this)">
+          <span>Settings</span>
+        </div>
+      </nav>
+    </div>
+
+    <div class="desktop-sidebar-footer">
+      <div style="font-size:11px; color:var(--text-dim); display:flex; justify-content:space-between;">
+        <span>DAILY AI SPEND</span>
+        <span class="spend-badge" id="desktopSpendText">$0.00 / $1.00</span>
+      </div>
+      <button class="btn-action primary" style="width:100%; justify-content:center;" onclick="openSetupModal()">
+        Setup Assistant
+      </button>
+      <button class="btn-action" style="width:100%; justify-content:center;" onclick="triggerManualSync()">
+        Sync Now
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="app-shell">
+
+    <!-- DESKTOP TOP BAR (> 1024px) -->
+    <div class="desktop-topbar" style="display:none;" id="desktopTopBar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span class="mono text-xs" style="color:var(--text-dim);" id="desktopBreadcrumb">INBOX / ALL SAVES</span>
+        <span class="tag-pill tool" id="desktopTailscaleBadge">TAILSCALE READY</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; width:450px;">
+        <input class="search-input" id="desktopSearchInput" type="search" placeholder="Search saved reels, tools, transcripts..." oninput="syncDesktopSearch(this.value)">
+      </div>
+    </div>
+
+    <!-- MOBILE & TABLET HEADER (< 1024px) -->
+    <header class="mobile-header">
+      <div class="header-row">
+        <div class="brand-mark">
+          <span class="brand-dot" id="daemonDot"></span>
+          <span>ELION</span>
+          <span class="brand-tag">VAULT</span>
+        </div>
+        <div class="header-actions">
+          <button class="btn-action primary" onclick="openSetupModal()">Setup</button>
+          <button class="btn-action" onclick="triggerManualSync()">↻</button>
+        </div>
       </div>
 
-      <input id="searchInput" class="search-input" type="search" placeholder="Search transcribed notes, tools, links..." oninput="filterNotes()">
+      <div class="status-bar">
+        <span id="daemonTaskText">Daemon active</span>
+        <span>Spend: <span class="spend-badge" id="daemonSpendText">$0.00 / $1.00</span></span>
+      </div>
+
+      <div class="search-wrapper">
+        <input id="searchInput" class="search-input" type="search" placeholder="Search transcribed notes, tools, transcripts..." oninput="filterNotes()">
+      </div>
+
+      <!-- TABLET TOP HORIZONTAL NAV (768px – 1023px) -->
+      <nav class="tablet-nav">
+        <span class="tablet-nav-link active" onclick="switchTab('tabInbox', this)">Inbox</span>
+        <span class="tablet-nav-link" onclick="switchTab('tabLibrary', this)">Library</span>
+        <span class="tablet-nav-link" onclick="switchTab('tabAsk', this)">Ask</span>
+        <span class="tablet-nav-link" onclick="switchTab('tabDaemon', this)">Daemon &amp; Logs</span>
+        <span class="tablet-nav-link" onclick="switchTab('tabApprovalsScreen', this)">Approvals</span>
+        <span class="tablet-nav-link" onclick="switchTab('tabSettings', this)">Settings</span>
+      </nav>
     </header>
 
-    <main>
-      <!-- TAB 1: INBOX -->
-      <div id="tabInbox" class="tab-content active">
-        <div class="approval-banner" id="approvalBanner">
-          <div class="approval-title" id="approvalCountText">Loading skill queue...</div>
-          <button class="approval-btn" onclick="openApprovalModal()">Review now</button>
+    <!-- CONTENT BODY -->
+    <main class="main-body">
+
+      <!-- SCREEN 1: TODAY'S INBOX & QUEUE -->
+      <div id="tabInbox" class="tab-view active">
+        <!-- Approval alert banner if skills pending -->
+        <div class="approval-alert" id="approvalBanner" style="display:none;">
+          <span class="approval-alert-text" id="approvalCountText">0 quarantined skills need approval</span>
+          <button class="btn-action" onclick="switchTab('tabApprovalsScreen')">Review</button>
         </div>
 
         <div class="filter-chips">
@@ -486,130 +1062,505 @@
           <button class="chip" onclick="setFilter('other', this)">Other</button>
         </div>
 
-        <h2 class="section-title">Today's INBOX</h2>
-        <div class="notes-list" id="inboxList"></div>
-      </div>
+        <div class="section-header">
+          <span>Today's Inbox &amp; Queue</span>
+          <span class="mono" id="inboxCountText">0 ITEMS</span>
+        </div>
 
-      <!-- TAB 2: LIBRARY -->
-      <div id="tabLibrary" class="tab-content">
-        <h2 class="section-title">Vault Library</h2>
-        <div class="notes-list" id="libraryList"></div>
-      </div>
+        <!-- Master-Detail Structure -->
+        <div class="master-detail-container">
+          <div class="master-list-col" id="inboxList"></div>
 
-      <!-- TAB 3: ASK (LOCAL VAULT QUERY) -->
-      <div id="tabAsk" class="tab-content">
-        <h2 class="section-title">Ask about your saves</h2>
-        <div class="chat-container">
-          <div class="chat-messages" id="chatMessages">
-            <div class="chat-msg jarvis">
-              ELION Vault ready. Ask me anything about your saved reels, e.g. <em>"What tools did we save this week?"</em>
+          <!-- Detail Inspector Pane (Tablet & Desktop) -->
+          <div class="detail-inspector" id="inboxDetailPane">
+            <div>
+              <div class="card-top" style="margin-bottom:8px;">
+                <span class="tag-pill other" id="dtlTag">TOOL</span>
+                <span class="mono text-xs" style="color:var(--text-dim);" id="dtlMeta">@creator • Date</span>
+              </div>
+              <h2 id="dtlTitle" style="font-size:16px; font-weight:700; color:#fff;">Select a saved note to view</h2>
+            </div>
+            <div>
+              <div class="detail-section-title">Real Summary</div>
+              <div class="detail-box" id="dtlSummary">Select a note from the left list to inspect its verified transcript summary.</div>
+            </div>
+            <div id="dtlStepsContainer" style="display:none;">
+              <div class="detail-section-title">Actionable Steps</div>
+              <div class="detail-box" id="dtlSteps"></div>
+            </div>
+            <div>
+              <div class="detail-section-title">Verified Audio Transcript</div>
+              <div class="detail-box mono" id="dtlTranscript">Audio transcription will appear here.</div>
             </div>
           </div>
-          <form class="chat-input-row" onsubmit="handleChatSubmit(event)">
-            <input id="chatInput" class="chat-input" type="text" placeholder="What tools did we save this week?" autocomplete="off">
-            <button type="submit" class="chat-send-btn">Ask</button>
+        </div>
+      </div>
+
+      <!-- SCREEN 2: VAULT LIBRARY -->
+      <div id="tabLibrary" class="tab-view">
+        <div class="section-header">
+          <span>Vault Archive</span>
+          <span class="mono" id="libraryCountText">0 SAVED</span>
+        </div>
+        <div class="master-detail-container">
+          <div class="master-list-col" id="libraryList"></div>
+          <div class="detail-inspector" id="libraryDetailPane">
+            <div>
+              <div class="card-top" style="margin-bottom:8px;">
+                <span class="tag-pill other" id="libTag">TOOL</span>
+                <span class="mono text-xs" style="color:var(--text-dim);" id="libMeta">@creator • Date</span>
+              </div>
+              <h2 id="libTitle" style="font-size:16px; font-weight:700; color:#fff;">Select a note to inspect</h2>
+            </div>
+            <div>
+              <div class="detail-section-title">Summary</div>
+              <div class="detail-box" id="libSummary">No note selected.</div>
+            </div>
+            <div>
+              <div class="detail-section-title">Transcript</div>
+              <div class="detail-box mono" id="libTranscript">No transcript selected.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: ASK (LOCAL VAULT QUERY MCP) -->
+      <div id="tabAsk" class="tab-view">
+        <div class="section-header">
+          <span>Ask Your Private Vault</span>
+          <span class="mono">LOCAL MCP</span>
+        </div>
+        <div class="chat-layout">
+          <div class="chat-stream" id="chatMessages">
+            <div class="bubble jarvis">
+              Vault assistant ready. Ask questions about your saved reels, transcripts, or tools (e.g. <em>"What AI audio tools did we save this week?"</em>).
+            </div>
+          </div>
+          <form class="chat-bar" onsubmit="handleChatSubmit(event)">
+            <input id="chatInput" class="input-text" style="flex:1;" type="text" placeholder="Ask about your saved reels..." autocomplete="off">
+            <button type="submit" class="btn-action primary">Ask</button>
           </form>
         </div>
       </div>
 
-      <!-- TAB 4: BACKGROUND SOURCES & MOBILE INTEGRATION -->
-      <div id="tabSources" class="tab-content">
-        <h2 class="section-title">Zero-Interruption Background Sync</h2>
-        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.45;">
-          You never have to leave Instagram, TikTok, or YouTube. ELION runs silently in the background on your laptop and transcribes videos automatically.
-        </p>
-
-        <!-- Integration 1: Native Instagram Saved Sync -->
-        <div class="approval-item">
-          <div class="approval-row">
-            <span style="font-weight: 700; font-size: 15px;">1. Native Instagram "Save" Sync</span>
-            <span class="tag other" id="igSyncBadge" style="margin:0;">BACKGROUND</span>
-          </div>
-          <span style="color: var(--text-muted); font-size: 13px; line-height: 1.45;">
-            Just tap the normal <strong>Bookmark / Save</strong> icon inside Instagram on your phone. The laptop daemon polls your Saved folder in the background, downloads audio-only, and runs Whisper locally.
-          </span>
+      <!-- SCREEN 4: DAEMON & ACTIVITY LOGS -->
+      <div id="tabDaemon" class="tab-view">
+        <div class="section-header">
+          <span>Daemon State &amp; Queue</span>
+          <span class="badge-status ok" id="queueBadge">0 PENDING</span>
         </div>
 
-        <!-- Integration 2: Silent In-App Share Webhook -->
-        <div class="approval-item">
-          <div class="approval-row">
-            <span style="font-weight: 700; font-size: 15px;">2. In-App Mobile Share Webhook</span>
-            <span class="tag tool" style="margin:0;">INSTANT</span>
+        <div class="panel-block">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:600;">Phone Capture Webhook</span>
+            <span class="badge-status ok">PROTECTED</span>
           </div>
-          <span style="color: var(--text-muted); font-size: 13px; line-height: 1.45;">
-            Point an iOS Shortcut or Android "HTTP Share" target to this background webhook. Tapping <strong>Share &rarr; Save to ELION</strong> inside Instagram/TikTok queues the video in 10ms without ever leaving your app:
-          </span>
-          <div class="code-box" id="webhookUrlBox">http://localhost:8080/api/webhook/save?url=</div>
+          <p style="font-size:11px; color:var(--text-muted);">
+            Endpoint accepts POST saves from iOS Shortcut and Android HTTP Shortcuts:
+          </p>
+          <div class="code-display" id="webhookUrlBox">http://127.0.0.1:8080/api/save?url=</div>
+          <button class="btn-action" style="align-self:flex-start;" onclick="copyWebhookUrl()">Copy Webhook URL</button>
         </div>
 
-        <!-- Integration 3: Cross-Device Clipboard Watcher -->
-        <div class="approval-item">
-          <div class="approval-row">
-            <span style="font-weight: 700; font-size: 15px;">3. Clipboard Auto-Capture</span>
-            <button class="btn-small" id="btnClipboardToggle" onclick="toggleClipboard()">ACTIVE</button>
+        <!-- Ingest Queue List -->
+        <div class="panel-block">
+          <div style="font-weight:600;">Pending Ingest Queue</div>
+          <div id="queueListContainer" style="font-size:12px; color:var(--text-muted);">
+            No items pending background processing.
           </div>
-          <span style="color: var(--text-muted); font-size: 13px; line-height: 1.45;">
-            Tap "Copy Link" inside Instagram or TikTok (works across phone &amp; laptop via Windows Phone Link / Universal Clipboard). ELION detects the link in the background and transcribes it automatically.
-          </span>
         </div>
 
-        <!-- Live Background Event Log -->
-        <div class="approval-item">
-          <span style="font-weight: 700; font-size: 15px;">Background Daemon Activity Log</span>
-          <div class="code-box" id="daemonLogBox" style="color: #9AA6C7; max-height: 150px; overflow-y: auto; line-height: 1.5;">
-            Waiting for events...
+        <!-- Errors Box -->
+        <div class="panel-block" id="errorLogSection" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:600; color:var(--status-err);">Recent System Errors</span>
+            <span class="badge-status err" id="errorCountBadge">0 ERRORS</span>
+          </div>
+          <div id="errorLogBox" class="code-display" style="color:var(--status-err); max-height:120px; overflow-y:auto;"></div>
+        </div>
+
+        <!-- Event Log -->
+        <div class="panel-block">
+          <div style="font-weight:600;">Live Daemon Activity Stream</div>
+          <div class="code-display" id="daemonLogBox" style="max-height:180px; overflow-y:auto;">
+            Connecting to event stream...
           </div>
         </div>
       </div>
+
+      <!-- SCREEN 5: SKILL APPROVALS -->
+      <div id="tabApprovalsScreen" class="tab-view">
+        <div class="section-header">
+          <span>Quarantined Skill Approvals</span>
+          <span class="badge-status warn">LOCALHOST ONLY</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted);">
+          Tools found in reels are quarantined until you approve them. Approvals only work from localhost for security.
+        </p>
+        <div id="approvalsPageList" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+
+      <!-- SCREEN 6: SETTINGS PAGE -->
+      <div id="tabSettings" class="tab-view">
+        <div class="section-header">
+          <span>Private Vault Configuration</span>
+          <span class="mono">PERSISTENT</span>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted);">
+          All toggles apply immediately and persist to your configuration. No terminal or .bat files needed.
+        </p>
+
+        <div class="settings-grid">
+          <!-- Automation & Capture -->
+          <div class="settings-panel">
+            <div class="settings-panel-title">Automation &amp; Capture</div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Clipboard Auto-Capture</div>
+                <div class="setting-desc">Transcribe reels copied on laptop or synced via Phone Link.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set_watch_clipboard" onchange="markSettingsChanged()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Phone Share Endpoint</div>
+                <div class="setting-desc">Accept POST saves from iOS Shortcut &amp; Android.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set_phone_share_enabled" onchange="markSettingsChanged()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Instagram Saved Polling</div>
+                <div class="setting-desc">Check your native Instagram bookmark folder in background.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set_instagram_sync_enabled" onchange="markSettingsChanged()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Instagram Poll Interval (min)</div>
+                <div class="setting-desc">Minutes to wait between background scans.</div>
+              </div>
+              <input type="number" id="set_instagram_poll_minutes" class="input-text number" min="5" max="360" value="30" onchange="markSettingsChanged()">
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Windows Auto-Start on Login</div>
+                <div class="setting-desc">Launch ELION silently in background when you sign in.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set_autostart_on_boot" onchange="markSettingsChanged()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Clean Up Audio Files</div>
+                <div class="setting-desc">Erase raw audio immediately after Whisper runs to save storage.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set_cleanup_audio_after_transcription" onchange="markSettingsChanged()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Share-to-Download Video (Local Archive)</div>
+                <div class="setting-desc">Auto-downloads full video file to vault/downloads/ when a link is shared. Default: OFF. For private personal backup only.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set_share_to_download_enabled" onchange="markSettingsChanged()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- AI Engine & Provider -->
+          <div class="settings-panel">
+            <div class="settings-panel-title">AI Summaries &amp; Classification</div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">AI Provider Engine</div>
+                <div class="setting-desc">Choose Claude, OpenAI, Gemini, local Ollama, or Zero-AI fallback.</div>
+              </div>
+              <select id="set_ai_provider" class="input-select" onchange="onAiProviderChanged()">
+                <option value="claude">Anthropic Claude (Default)</option>
+                <option value="openai">OpenAI (GPT-4o mini)</option>
+                <option value="gemini">Google Gemini (1.5 Flash)</option>
+                <option value="ollama">Local Ollama (Offline / Free)</option>
+                <option value="none">Zero-AI Fallback (Extractive text)</option>
+              </select>
+            </div>
+
+            <div id="aiFieldAnthropic" class="setting-item" style="display:none;">
+              <div class="setting-meta">
+                <div class="setting-title">Anthropic API Key</div>
+                <div class="setting-desc" id="anthropicKeyStatus">Stored securely in .env</div>
+              </div>
+              <input type="password" id="set_anthropic_api_key" class="input-text" placeholder="sk-ant-..." onchange="markSettingsChanged()">
+            </div>
+
+            <div id="aiFieldOpenAI" class="setting-item" style="display:none;">
+              <div class="setting-meta">
+                <div class="setting-title">OpenAI API Key</div>
+                <div class="setting-desc" id="openaiKeyStatus">Stored securely in .env</div>
+              </div>
+              <input type="password" id="set_openai_api_key" class="input-text" placeholder="sk-..." onchange="markSettingsChanged()">
+            </div>
+
+            <div id="aiFieldGemini" class="setting-item" style="display:none;">
+              <div class="setting-meta">
+                <div class="setting-title">Gemini API Key</div>
+                <div class="setting-desc" id="geminiKeyStatus">Stored securely in .env</div>
+              </div>
+              <input type="password" id="set_gemini_api_key" class="input-text" placeholder="AIzaSy..." onchange="markSettingsChanged()">
+            </div>
+
+            <div id="aiFieldOllama" style="display:none; flex-direction:column; gap:10px;">
+              <div class="setting-item">
+                <div class="setting-meta">
+                  <div class="setting-title">Ollama Endpoint</div>
+                  <div class="setting-desc">Default: http://localhost:11434</div>
+                </div>
+                <input type="text" id="set_ollama_endpoint" class="input-text" value="http://localhost:11434" onchange="markSettingsChanged()">
+              </div>
+              <div class="setting-item">
+                <div class="setting-meta">
+                  <div class="setting-title">Ollama Model</div>
+                  <div class="setting-desc">e.g. llama3.2, mistral, or phi3</div>
+                </div>
+                <input type="text" id="set_ollama_model" class="input-text" value="llama3.2" onchange="markSettingsChanged()">
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
+              <button class="btn-action" type="button" onclick="testCurrentAiProvider()">Test AI Provider</button>
+              <span id="aiTestResultBadge" class="mono" style="font-size:11px; font-weight:600;"></span>
+            </div>
+          </div>
+
+          <!-- Transcription & Spend Limits -->
+          <div class="settings-panel">
+            <div class="settings-panel-title">Transcription &amp; Limits</div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Transcription Engine</div>
+                <div class="setting-desc">Quantized C++ or standard Python Whisper.</div>
+              </div>
+              <select id="set_transcription_engine" class="input-select" onchange="markSettingsChanged()">
+                <option value="whisper_cpp">whisper.cpp (Recommended / Fast)</option>
+                <option value="faster_whisper">faster-whisper</option>
+                <option value="python_whisper">python-whisper</option>
+              </select>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Whisper Model</div>
+                <div class="setting-desc">base.en is fast and accurate for reels.</div>
+              </div>
+              <select id="set_transcription_model" class="input-select" onchange="markSettingsChanged()">
+                <option value="base.en">base.en (Default)</option>
+                <option value="small.en">small.en</option>
+                <option value="tiny.en">tiny.en</option>
+              </select>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Daily AI Spend Cap (USD)</div>
+                <div class="setting-desc">Prevents unexpected token costs automatically.</div>
+              </div>
+              <input type="number" id="set_daily_spend_cap_usd" class="input-text number" step="0.25" min="0.10" max="50.00" value="1.00" onchange="markSettingsChanged()">
+            </div>
+          </div>
+
+          <!-- Network & Security -->
+          <div class="settings-panel">
+            <div class="settings-panel-title">Network &amp; Security</div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Allow Tailscale Interface</div>
+                <div class="setting-desc">Enable private capture from your phone over Tailscale VPN.</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="set_allow_tailscale" onchange="markSettingsChanged()">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-meta">
+                <div class="setting-title">Private Auth Token</div>
+                <div class="setting-desc">Generated random secret required on all save requests.</div>
+              </div>
+              <button class="btn-action" onclick="copyAuthToken()">Copy Token</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-save" id="btnSaveSettings" onclick="saveAllSettings()">Save Changes</button>
+        <div id="settingsSaveStatus" style="font-size:12px; text-align:center; color:var(--status-ok); display:none;">Settings saved successfully.</div>
+      </div>
+
     </main>
 
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
-      <button class="nav-item active" onclick="switchTab('tabInbox', this)">
+    <!-- MOBILE BOTTOM NAVIGATION (< 768px) -->
+    <nav class="mobile-bottom-nav">
+      <button class="nav-btn active" onclick="switchTab('tabInbox', this)">
         <span>Inbox</span>
       </button>
-      <button class="nav-item" onclick="switchTab('tabLibrary', this)">
-        <span>Library</span>
+      <button class="nav-btn" onclick="switchTab('tabLibrary', this)">
+        <span>Vault</span>
       </button>
-      <button class="nav-item" onclick="switchTab('tabAsk', this)">
+      <button class="nav-btn" onclick="switchTab('tabAsk', this)">
         <span>Ask</span>
       </button>
-      <button class="nav-item" onclick="switchTab('tabSources', this)">
-        <span>Daemon &amp; Sync</span>
+      <button class="nav-btn" onclick="switchTab('tabDaemon', this)">
+        <span>Daemon</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('tabSettings', this)">
+        <span>Settings</span>
       </button>
     </nav>
 
-    <!-- MODAL: APPROVAL QUEUE -->
-    <div class="modal-overlay" id="approvalModal">
-      <div class="modal-sheet">
-        <div class="modal-header">
-          <div class="modal-title">Skills Awaiting Approval</div>
-          <button class="close-btn" onclick="closeApprovalModal()">&times;</button>
-        </div>
-        <div id="approvalsList" style="display:flex; flex-direction:column; gap:12px;"></div>
-      </div>
-    </div>
-
-    <!-- MODAL: NOTE DETAILS -->
+    <!-- MOBILE NOTE DETAIL MODAL SHEET -->
     <div class="modal-overlay" id="noteDetailModal">
       <div class="modal-sheet">
         <div class="modal-header">
-          <span class="tag" id="noteDetailTag">TOOL</span>
-          <button class="close-btn" onclick="closeNoteModal()">&times;</button>
+          <span class="tag-pill other" id="noteDetailTag">TOOL</span>
+          <button class="modal-close-btn" onclick="closeNoteModal()">&times;</button>
         </div>
-        <h2 id="noteDetailTitle" style="font-size:18px; line-height:1.3;"></h2>
-        <div id="noteDetailMeta" style="font-size:13px; color:var(--text-muted);"></div>
-        <div style="margin-top:10px;">
-          <h4 style="color:var(--accent); font-size:13px; margin-bottom:4px;">SUMMARY</h4>
-          <p id="noteDetailSummary" style="font-size:14px; line-height:1.5; color:#E8ECF8;"></p>
+        <h2 id="noteDetailTitle" style="font-size:16px; font-weight:700; color:#fff;"></h2>
+        <div id="noteDetailMeta" style="font-size:11px; color:var(--text-dim);" class="mono"></div>
+        <div>
+          <div class="detail-section-title">Verified Summary</div>
+          <div class="detail-box" id="noteDetailSummary"></div>
         </div>
-        <div id="noteDetailStepsBox" style="margin-top:10px;">
-          <h4 style="color:var(--lime); font-size:13px; margin-bottom:4px;">STEPS</h4>
-          <div id="noteDetailSteps" style="font-size:14px; line-height:1.5;"></div>
+        <div id="noteDetailStepsBox" style="display:none;">
+          <div class="detail-section-title">Actionable Steps</div>
+          <div class="detail-box" id="noteDetailSteps"></div>
         </div>
-        <div style="margin-top:10px;">
-          <h4 style="color:var(--text-muted); font-size:13px; margin-bottom:4px;">FULL TRANSCRIPT</h4>
-          <div id="noteDetailTranscript" style="font-size:13px; line-height:1.5; color:#9AA6C7; background:#080D19; padding:12px; border-radius:10px; max-height:180px; overflow-y:auto;"></div>
+        <div>
+          <div class="detail-section-title">Verified Audio Transcript</div>
+          <div class="detail-box mono" id="noteDetailTranscript"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIRST-RUN SETUP ASSISTANT MODAL -->
+    <div class="modal-overlay" id="setupAssistantModal">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <div style="font-weight:700; font-size:14px;">First-Run Setup Assistant</div>
+          <button class="modal-close-btn" onclick="closeSetupModal()">&times;</button>
+        </div>
+
+        <div class="wizard-steps">
+          <div class="wizard-dot active" id="dotStep1"></div>
+          <div class="wizard-dot" id="dotStep2"></div>
+          <div class="wizard-dot" id="dotStep3"></div>
+          <div class="wizard-dot" id="dotStep4"></div>
+          <div class="wizard-dot" id="dotStep5"></div>
+        </div>
+
+        <!-- Step 1: Health Diagnostics -->
+        <div class="wizard-step active" id="wizStep1">
+          <div class="setting-title" style="color:var(--accent);">1. System Diagnostics</div>
+          <p style="font-size:12px; color:var(--text-muted);">
+            Verifies local Python virtual environment, audio transcription binaries, and secure token protection.
+          </p>
+          <div id="diagList" style="display:flex; flex-direction:column; gap:6px;">
+            <div class="panel-block" style="padding:8px 12px;">Running diagnostics...</div>
+          </div>
+          <button class="btn-action" style="align-self:flex-start;" onclick="runDiagnostics()">Re-run Diagnostics</button>
+        </div>
+
+        <!-- Step 2: AI Provider -->
+        <div class="wizard-step" id="wizStep2">
+          <div class="setting-title" style="color:var(--accent);">2. Choose AI Engine</div>
+          <p style="font-size:12px; color:var(--text-muted);">
+            Claude is recommended, or select local Ollama for 100% offline free processing.
+          </p>
+          <select id="wiz_ai_provider" class="input-select" onchange="onWizAiProviderChanged()">
+            <option value="claude">Anthropic Claude (Default / Recommended)</option>
+            <option value="openai">OpenAI (GPT-4o mini)</option>
+            <option value="gemini">Google Gemini (1.5 Flash)</option>
+            <option value="ollama">Local Ollama (100% Offline / Free)</option>
+            <option value="none">Zero-AI Fallback (Extractive text analysis)</option>
+          </select>
+          <input type="password" id="wiz_api_key" class="input-text" placeholder="Enter API Key (sk-...)" style="margin-top:4px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="btn-action" type="button" onclick="testWizAi()">Test Provider</button>
+            <span id="wizAiTestStatus" class="mono" style="font-size:11px; font-weight:700;"></span>
+          </div>
+        </div>
+
+        <!-- Step 3: Phone Shortcuts -->
+        <div class="wizard-step" id="wizStep3">
+          <div class="setting-title" style="color:var(--accent);">3. Phone Share Setup</div>
+          <p style="font-size:12px; color:var(--text-muted);">
+            Save reels directly from your iOS or Android share sheet:
+          </p>
+          <div style="font-size:12px; line-height:1.5; color:var(--text-muted);">
+            <strong style="color:#fff;">iOS Shortcut:</strong>
+            <ol style="margin-left:16px; margin-top:2px;">
+              <li>Create shortcut <em>Save to ELION</em> with "Receive URLs on screen".</li>
+              <li>Add action: <strong>Get Contents of URL</strong> (Method: POST).</li>
+              <li>Header: <code>X-Elion-Token: <span id="wizTokenSnippet">...</span></code></li>
+              <li>URL: <code id="wizUrlSnippet">http://&lt;tailscale-ip&gt;:8080/api/save</code></li>
+            </ol>
+            <br>
+            <strong style="color:#fff;">Android:</strong> Install <em>HTTP Shortcuts</em> from F-Droid or Play Store and set target URL to above.
+          </div>
+          <button class="btn-action" style="align-self:flex-start;" onclick="copyPhoneConfig()">Copy Setup URL &amp; Token</button>
+        </div>
+
+        <!-- Step 4: Instagram Sync -->
+        <div class="wizard-step" id="wizStep4">
+          <div class="setting-title" style="color:var(--accent);">4. Instagram Saved Sync (Optional)</div>
+          <p style="font-size:12px; color:var(--text-muted);">
+            To poll your Instagram Saved folder automatically in the background:
+          </p>
+          <input type="text" id="wiz_ig_username" class="input-text" placeholder="Instagram Username (optional)">
+          <input type="password" id="wiz_ig_session" class="input-text" placeholder="Instagram Session ID (optional)">
+          <p style="font-size:11px; color:var(--text-dim);">
+            Tip: You can skip this! Phone Share and Clipboard Auto-Capture work instantly without logging into Instagram.
+          </p>
+        </div>
+
+        <!-- Step 5: Completed -->
+        <div class="wizard-step" id="wizStep5">
+          <div class="setting-title" style="color:var(--status-ok);">5. ELION Ready &amp; Active</div>
+          <p style="font-size:12px; color:var(--text-muted);">
+            Background monitoring is active. Whenever you copy or share a reel, ELION will quietly transcribe it and organize it into your local markdown vault.
+          </p>
+          <div class="panel-block" style="font-family:var(--font-mono); font-size:11px; color:var(--accent);">
+            Local Vault Path: jarvis/vault/notes
+          </div>
+        </div>
+
+        <div class="wizard-nav">
+          <button class="btn-action" id="btnWizBack" onclick="prevWizStep()" style="visibility:hidden;">Back</button>
+          <button class="btn-action primary" id="btnWizNext" onclick="nextWizStep()">Next &rarr;</button>
         </div>
       </div>
     </div>
@@ -620,6 +1571,9 @@
     let currentFilter = 'all';
     let allNotes = [];
     let pendingApprovals = [];
+    let currentSettings = {};
+    let currentWizStep = 1;
+    let selectedNoteId = null;
 
     async function loadData() {
       try {
@@ -630,31 +1584,89 @@
       try {
         const appRes = await fetch('/api/approvals');
         pendingApprovals = await appRes.json();
-        const bannerEl = document.getElementById('approvalCountText');
-        if (bannerEl) {
-          bannerEl.textContent = `${pendingApprovals.length} skills need your OK`;
+        const bannerEl = document.getElementById('approvalBanner');
+        const countText = document.getElementById('approvalCountText');
+        const desktopBadge = document.getElementById('desktopApprovalBadge');
+        if (pendingApprovals.length > 0) {
+          bannerEl.style.display = 'flex';
+          countText.textContent = `${pendingApprovals.length} skill${pendingApprovals.length > 1 ? 's' : ''} need your approval`;
+          if (desktopBadge) {
+            desktopBadge.style.display = 'inline-block';
+            desktopBadge.textContent = `${pendingApprovals.length}`;
+          }
+        } else {
+          bannerEl.style.display = 'none';
+          if (desktopBadge) desktopBadge.style.display = 'none';
         }
       } catch (e) {}
 
       await refreshDaemonStatus();
       renderNotes();
+      renderApprovals();
     }
 
     async function refreshDaemonStatus() {
       try {
         const res = await fetch('/api/daemon/status');
         const st = await res.json();
-        document.getElementById('daemonTaskText').textContent = st.current_task || 'Background Daemon Active';
-        document.getElementById('daemonStatsText').textContent = `${st.queue_size || 0} queued • ${st.total_processed_all_time || 0} saved`;
+        
+        const taskText = st.current_task || 'Daemon Active';
+        document.getElementById('daemonTaskText').textContent = taskText;
 
-        if (st.local_ip) {
-          document.getElementById('webhookUrlBox').textContent = `http://${st.local_ip}:8080/api/webhook/save?url=`;
+        const isRunning = st.status === 'running';
+        const dot = document.getElementById('daemonDot');
+        const desktopDot = document.getElementById('desktopDot');
+        if (dot) dot.className = 'brand-dot' + (isRunning ? '' : ' paused');
+        if (desktopDot) desktopDot.className = 'brand-dot' + (isRunning ? '' : ' paused');
+
+        if (st.spend_data) {
+          const spent = (st.spend_data.spent_usd || 0).toFixed(2);
+          const cap = (st.spend_data.daily_cap_usd || 1.0).toFixed(2);
+          const spendStr = `$${spent} / $${cap}`;
+          document.getElementById('daemonSpendText').textContent = spendStr;
+          const dtSpend = document.getElementById('desktopSpendText');
+          if (dtSpend) dtSpend.textContent = spendStr;
         }
 
-        const clipBtn = document.getElementById('btnClipboardToggle');
-        if (clipBtn) {
-          clipBtn.textContent = st.clipboard_watcher_active ? 'ACTIVE' : 'PAUSED';
-          clipBtn.style.color = st.clipboard_watcher_active ? '#C6F26A' : '#9AA6C7';
+        if (st.auth_token) {
+          window.elionAuthToken = st.auth_token;
+        }
+
+        const host = (st.allow_tailscale && st.tailscale_ip) ? st.tailscale_ip : (st.bind_address || '127.0.0.1');
+        const tokenSnippet = window.elionAuthToken ? `&token=${window.elionAuthToken}` : '';
+        const webhookBox = document.getElementById('webhookUrlBox');
+        if (webhookBox) {
+          webhookBox.textContent = `http://${host}:8080/api/save?url=<REEL_URL>${tokenSnippet}`;
+        }
+
+        const qBadge = document.getElementById('queueBadge');
+        if (qBadge) {
+          qBadge.textContent = `${st.queue_size || 0} PENDING`;
+        }
+
+        const queueContainer = document.getElementById('queueListContainer');
+        if (queueContainer) {
+          if (st.queue_items && st.queue_items.length > 0) {
+            queueContainer.innerHTML = st.queue_items.map(item => `
+              <div style="padding:4px 0; border-bottom:1px solid var(--border-subtle);">
+                <strong>${item.source || 'save'}</strong>: ${item.url || ''}
+              </div>
+            `).join('');
+          } else {
+            queueContainer.textContent = 'No items pending background processing.';
+          }
+        }
+
+        // Errors section
+        const errSection = document.getElementById('errorLogSection');
+        const errBox = document.getElementById('errorLogBox');
+        const errBadge = document.getElementById('errorCountBadge');
+        if (st.errors && st.errors.length > 0) {
+          errSection.style.display = 'flex';
+          errBadge.textContent = `${st.errors.length} ERRORS`;
+          errBox.innerHTML = st.errors.map(e => `<div>[${e.time}] ${e.message}</div>`).join('');
+        } else {
+          errSection.style.display = 'none';
         }
 
         const logBox = document.getElementById('daemonLogBox');
@@ -664,22 +1676,320 @@
       } catch (e) {}
     }
 
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        currentSettings = await res.json();
+
+        document.getElementById('set_watch_clipboard').checked = Boolean(currentSettings.watch_clipboard);
+        document.getElementById('set_phone_share_enabled').checked = Boolean(currentSettings.phone_share_enabled);
+        document.getElementById('set_instagram_sync_enabled').checked = Boolean(currentSettings.instagram_sync_enabled);
+        document.getElementById('set_instagram_poll_minutes').value = currentSettings.instagram_poll_minutes || 30;
+        document.getElementById('set_autostart_on_boot').checked = Boolean(currentSettings.autostart_on_boot);
+        document.getElementById('set_cleanup_audio_after_transcription').checked = Boolean(currentSettings.cleanup_audio_after_transcription);
+        document.getElementById('set_share_to_download_enabled').checked = Boolean(currentSettings.share_to_download_enabled);
+        document.getElementById('set_transcription_engine').value = currentSettings.transcription_engine || 'whisper_cpp';
+        document.getElementById('set_transcription_model').value = currentSettings.transcription_model || 'base.en';
+        document.getElementById('set_daily_spend_cap_usd').value = currentSettings.daily_spend_cap_usd || 1.00;
+        document.getElementById('set_allow_tailscale').checked = Boolean(currentSettings.allow_tailscale);
+
+        if (currentSettings.ai_provider) {
+          document.getElementById('set_ai_provider').value = currentSettings.ai_provider;
+        }
+        if (currentSettings.ollama_endpoint) {
+          document.getElementById('set_ollama_endpoint').value = currentSettings.ollama_endpoint;
+        }
+        if (currentSettings.ollama_model) {
+          document.getElementById('set_ollama_model').value = currentSettings.ollama_model;
+        }
+
+        if (currentSettings.has_anthropic_key) {
+          document.getElementById('anthropicKeyStatus').textContent = 'Key configured (stored in .env)';
+        }
+        if (currentSettings.has_openai_key) {
+          document.getElementById('openaiKeyStatus').textContent = 'Key configured (stored in .env)';
+        }
+        if (currentSettings.has_gemini_key) {
+          document.getElementById('geminiKeyStatus').textContent = 'Key configured (stored in .env)';
+        }
+
+        onAiProviderChanged();
+      } catch (e) {}
+    }
+
+    function onAiProviderChanged() {
+      const p = document.getElementById('set_ai_provider').value;
+      document.getElementById('aiFieldAnthropic').style.display = (p === 'claude') ? 'flex' : 'none';
+      document.getElementById('aiFieldOpenAI').style.display = (p === 'openai') ? 'flex' : 'none';
+      document.getElementById('aiFieldGemini').style.display = (p === 'gemini') ? 'flex' : 'none';
+      document.getElementById('aiFieldOllama').style.display = (p === 'ollama') ? 'flex' : 'none';
+      markSettingsChanged();
+    }
+
+    function markSettingsChanged() {
+      const btn = document.getElementById('btnSaveSettings');
+      if (btn) {
+        btn.style.borderColor = 'var(--accent)';
+      }
+    }
+
+    async function saveAllSettings() {
+      const payload = {
+        watch_clipboard: document.getElementById('set_watch_clipboard').checked,
+        phone_share_enabled: document.getElementById('set_phone_share_enabled').checked,
+        instagram_sync_enabled: document.getElementById('set_instagram_sync_enabled').checked,
+        instagram_poll_minutes: parseInt(document.getElementById('set_instagram_poll_minutes').value, 10),
+        autostart_on_boot: document.getElementById('set_autostart_on_boot').checked,
+        cleanup_audio_after_transcription: document.getElementById('set_cleanup_audio_after_transcription').checked,
+        share_to_download_enabled: document.getElementById('set_share_to_download_enabled').checked,
+        transcription_engine: document.getElementById('set_transcription_engine').value,
+        transcription_model: document.getElementById('set_transcription_model').value,
+        daily_spend_cap_usd: parseFloat(document.getElementById('set_daily_spend_cap_usd').value),
+        allow_tailscale: document.getElementById('set_allow_tailscale').checked,
+        ai_provider: document.getElementById('set_ai_provider').value,
+        ollama_endpoint: document.getElementById('set_ollama_endpoint').value,
+        ollama_model: document.getElementById('set_ollama_model').value
+      };
+
+      const antKey = document.getElementById('set_anthropic_api_key').value.trim();
+      if (antKey) payload.anthropic_api_key = antKey;
+      const oaiKey = document.getElementById('set_openai_api_key').value.trim();
+      if (oaiKey) payload.openai_api_key = oaiKey;
+      const gemKey = document.getElementById('set_gemini_api_key').value.trim();
+      if (gemKey) payload.gemini_api_key = gemKey;
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        await res.json();
+        const stat = document.getElementById('settingsSaveStatus');
+        stat.style.display = 'block';
+        setTimeout(() => stat.style.display = 'none', 3000);
+        await refreshDaemonStatus();
+      } catch (err) {
+        alert('Failed to save settings: ' + err);
+      }
+    }
+
+    async function testCurrentAiProvider() {
+      const badge = document.getElementById('aiTestResultBadge');
+      badge.textContent = 'Testing...';
+      badge.style.color = 'var(--accent)';
+
+      const provider = document.getElementById('set_ai_provider').value;
+      const payload = { provider };
+      if (provider === 'claude') payload.api_key = document.getElementById('set_anthropic_api_key').value.trim();
+      if (provider === 'openai') payload.api_key = document.getElementById('set_openai_api_key').value.trim();
+      if (provider === 'gemini') payload.api_key = document.getElementById('set_gemini_api_key').value.trim();
+      if (provider === 'ollama') {
+        payload.endpoint = document.getElementById('set_ollama_endpoint').value.trim();
+        payload.model = document.getElementById('set_ollama_model').value.trim();
+      }
+
+      try {
+        const res = await fetch('/api/settings/test_ai', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          badge.textContent = '✓ ' + data.message;
+          badge.style.color = 'var(--status-ok)';
+        } else {
+          badge.textContent = '✗ ' + data.message;
+          badge.style.color = 'var(--status-err)';
+        }
+      } catch (e) {
+        badge.textContent = '✗ Connection test failed';
+        badge.style.color = 'var(--status-err)';
+      }
+    }
+
+    // Diagnostics & Setup Wizard
+    async function runDiagnostics() {
+      const container = document.getElementById('diagList');
+      container.innerHTML = '<div class="panel-block" style="padding:8px 12px;">Scanning environment...</div>';
+      try {
+        const res = await fetch('/api/diagnostics');
+        const d = await res.json();
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:6px; padding:6px 10px; font-size:12px;">
+            <span>Virtualenv (.venv)</span>
+            <span class="badge-status ${d.venv_active ? 'ok' : 'warn'}">${d.venv_active ? 'ACTIVE' : 'SYSTEM PYTHON'}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:6px; padding:6px 10px; font-size:12px;">
+            <span>Whisper Transcription Engine</span>
+            <span class="badge-status ${d.transcription_ready ? 'ok' : 'err'}">${d.transcription_ready ? 'READY' : 'MISSING'}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:6px; padding:6px 10px; font-size:12px;">
+            <span>Auth Token Protection</span>
+            <span class="badge-status ${d.auth_token_set ? 'ok' : 'err'}">${d.auth_token_set ? 'CONFIGURED' : 'UNSET'}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:6px; padding:6px 10px; font-size:12px;">
+            <span>Tailscale Interface</span>
+            <span class="badge-status ${d.tailscale_ip ? 'ok' : 'warn'}">${d.tailscale_ip ? d.tailscale_ip : 'NOT DETECTED'}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-canvas); border:1px solid var(--border-subtle); border-radius:6px; padding:6px 10px; font-size:12px;">
+            <span>AI Provider (${d.ai_provider})</span>
+            <span class="badge-status ${d.ai_status_ok ? 'ok' : 'warn'}">${d.ai_status_ok ? 'ONLINE' : 'CONFIG NEEDED'}</span>
+          </div>
+        `;
+        if (window.elionAuthToken) {
+          document.getElementById('wizTokenSnippet').textContent = window.elionAuthToken;
+        }
+        if (d.tailscale_ip) {
+          document.getElementById('wizUrlSnippet').textContent = `http://${d.tailscale_ip}:8080/api/save`;
+        }
+      } catch (e) {
+        container.innerHTML = '<div class="panel-block" style="color:var(--status-err);">Error running diagnostics</div>';
+      }
+    }
+
+    function openSetupModal() {
+      currentWizStep = 1;
+      updateWizardUI();
+      runDiagnostics();
+      document.getElementById('setupAssistantModal').classList.add('open');
+    }
+
+    function closeSetupModal() {
+      document.getElementById('setupAssistantModal').classList.remove('open');
+    }
+
+    function updateWizardUI() {
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`wizStep${i}`).classList.remove('active');
+        const dot = document.getElementById(`dotStep${i}`);
+        dot.className = 'wizard-dot' + (i === currentWizStep ? ' active' : (i < currentWizStep ? ' completed' : ''));
+      }
+      document.getElementById(`wizStep${currentWizStep}`).classList.add('active');
+      document.getElementById('btnWizBack').style.visibility = currentWizStep === 1 ? 'hidden' : 'visible';
+      document.getElementById('btnWizNext').textContent = currentWizStep === 5 ? 'Finish & Launch' : 'Next →';
+    }
+
+    function nextWizStep() {
+      if (currentWizStep === 2) {
+        const prov = document.getElementById('wiz_ai_provider').value;
+        const key = document.getElementById('wiz_api_key').value.trim();
+        const payload = { ai_provider: prov };
+        if (key) {
+          if (prov === 'claude') payload.anthropic_api_key = key;
+          if (prov === 'openai') payload.openai_api_key = key;
+          if (prov === 'gemini') payload.gemini_api_key = key;
+        }
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+      } else if (currentWizStep === 4) {
+        const u = document.getElementById('wiz_ig_username').value.trim();
+        const s = document.getElementById('wiz_ig_session').value.trim();
+        if (u || s) {
+          fetch('/api/settings', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ instagram_username: u, instagram_session_id: s })
+          });
+        }
+      } else if (currentWizStep === 5) {
+        closeSetupModal();
+        loadData();
+        loadSettings();
+        return;
+      }
+      currentWizStep++;
+      updateWizardUI();
+    }
+
+    function prevWizStep() {
+      if (currentWizStep > 1) {
+        currentWizStep--;
+        updateWizardUI();
+      }
+    }
+
+    function onWizAiProviderChanged() {
+      const p = document.getElementById('wiz_ai_provider').value;
+      const inp = document.getElementById('wiz_api_key');
+      if (p === 'ollama' || p === 'none') {
+        inp.style.display = 'none';
+      } else {
+        inp.style.display = 'block';
+        inp.placeholder = p === 'claude' ? 'sk-ant-...' : (p === 'openai' ? 'sk-...' : 'Gemini Key...');
+      }
+    }
+
+    async function testWizAi() {
+      const st = document.getElementById('wizAiTestStatus');
+      st.textContent = 'Testing...';
+      const prov = document.getElementById('wiz_ai_provider').value;
+      const key = document.getElementById('wiz_api_key').value.trim();
+      const res = await fetch('/api/settings/test_ai', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ provider: prov, api_key: key })
+      });
+      const data = await res.json();
+      st.textContent = data.success ? '✓ Ready' : '✗ ' + data.message;
+      st.style.color = data.success ? 'var(--status-ok)' : 'var(--status-err)';
+    }
+
+    function copyPhoneConfig() {
+      const host = (currentSettings.allow_tailscale && currentSettings.tailscale_ip) ? currentSettings.tailscale_ip : '127.0.0.1';
+      const token = window.elionAuthToken || '';
+      const text = `URL: http://${host}:8080/api/save\nHeader: X-Elion-Token: ${token}\nPayload: {"url": "<video_url>"}`;
+      navigator.clipboard.writeText(text);
+      alert('Phone shortcut configuration copied to clipboard!');
+    }
+
+    function copyWebhookUrl() {
+      const box = document.getElementById('webhookUrlBox');
+      if (box) {
+        navigator.clipboard.writeText(box.textContent.trim());
+        alert('Endpoint URL copied to clipboard!');
+      }
+    }
+
+    function copyAuthToken() {
+      if (window.elionAuthToken) {
+        navigator.clipboard.writeText(window.elionAuthToken);
+        alert('ELION Auth Token copied to clipboard!');
+      }
+    }
+
     async function triggerManualSync() {
       await fetch('/api/daemon/sync', { method: 'POST' });
       await loadData();
     }
 
-    async function toggleClipboard() {
-      await fetch('/api/daemon/toggle_clipboard', { method: 'POST' });
-      await refreshDaemonStatus();
-    }
-
     function switchTab(tabId, el) {
-      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      el.classList.add('active');
-      renderNotes();
+      document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
+      const target = document.getElementById(tabId);
+      if (target) target.classList.add('active');
+
+      // Update mobile nav buttons
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      // Update tablet nav links
+      document.querySelectorAll('.tablet-nav-link').forEach(b => b.classList.remove('active'));
+      // Update desktop links
+      document.querySelectorAll('.desktop-nav-link').forEach(b => b.classList.remove('active'));
+
+      if (el) {
+        el.classList.add('active');
+      }
+
+      if (tabId === 'tabSettings') {
+        loadSettings();
+      } else if (tabId === 'tabApprovalsScreen') {
+        renderApprovals();
+      } else {
+        renderNotes();
+      }
     }
 
     function setFilter(type, el) {
@@ -691,8 +2001,13 @@
 
     function filterNotes() { renderNotes(); }
 
+    function syncDesktopSearch(val) {
+      document.getElementById('searchInput').value = val;
+      renderNotes();
+    }
+
     function renderNotes() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
+      const query = (document.getElementById('searchInput').value || '').toLowerCase();
       const inboxList = document.getElementById('inboxList');
       const libraryList = document.getElementById('libraryList');
       inboxList.innerHTML = '';
@@ -708,49 +2023,128 @@
         return matchesFilter && matchesQuery;
       });
 
+      const inboxCountText = document.getElementById('inboxCountText');
+      const libraryCountText = document.getElementById('libraryCountText');
+      const dtInboxCount = document.getElementById('desktopInboxCount');
+      const dtLibraryCount = document.getElementById('desktopLibraryCount');
+
+      if (inboxCountText) inboxCountText.textContent = `${filtered.length} ITEMS`;
+      if (libraryCountText) libraryCountText.textContent = `${allNotes.length} SAVED`;
+      if (dtInboxCount) dtInboxCount.textContent = `${filtered.length}`;
+      if (dtLibraryCount) dtLibraryCount.textContent = `${allNotes.length}`;
+
       if (filtered.length === 0) {
-        const emptyMsg = '<p style="color: var(--text-muted); padding: 14px 0;">No notes found matching filter.</p>';
+        const emptyMsg = '<p style="color:var(--text-muted); padding:16px 0; font-size:12px;">No saved notes matching criteria.</p>';
         inboxList.innerHTML = emptyMsg;
         libraryList.innerHTML = emptyMsg;
         return;
       }
 
-      filtered.forEach(note => inboxList.appendChild(createCard(note)));
-      allNotes.forEach(note => libraryList.appendChild(createCard(note)));
+      filtered.forEach((note, idx) => {
+        const card = createCard(note, idx);
+        inboxList.appendChild(card);
+      });
+
+      allNotes.forEach((note, idx) => {
+        const card = createCard(note, idx);
+        libraryList.appendChild(card);
+      });
+
+      // Auto-select first item for tablet/desktop inspector
+      if (filtered.length > 0 && !selectedNoteId) {
+        selectNote(filtered[0], false);
+      }
     }
 
-    function createCard(note) {
+    function createCard(note, idx) {
       const card = document.createElement('div');
-      card.className = 'note-card';
+      card.className = 'note-card' + (selectedNoteId === (note.id || note.title) ? ' selected' : '');
       const typeClass = (note.type || 'other').toLowerCase();
       const displayType = typeClass === 'tool' ? 'Tool' : (typeClass === 'ai' ? 'AI' : 'Other');
       const snippet = note.summary || note.transcript || '';
 
       card.innerHTML = `
-        <span class="tag ${typeClass}">${displayType}</span>
-        <span class="note-title">${note.title}</span>
-        <span class="note-meta">${note.creator} • ${note.saved_at}</span>
-        <span class="note-snippet">${snippet.substring(0, 110)}${snippet.length > 110 ? '...' : ''}</span>
+        <div class="card-top">
+          <span class="tag-pill ${typeClass}">${displayType}</span>
+          <span class="card-meta">${note.creator} • ${note.saved_at}</span>
+        </div>
+        <div class="card-title">${note.title}</div>
+        <div class="card-summary">${snippet}</div>
       `;
-      card.onclick = () => openNoteModal(note);
+      card.onclick = () => selectNote(note, true);
       return card;
+    }
+
+    function selectNote(note, isUserClick) {
+      selectedNoteId = note.id || note.title;
+
+      // Update card visual selection
+      document.querySelectorAll('.note-card').forEach(c => c.classList.remove('selected'));
+
+      // Populate Tablet/Desktop Detail Inspector Pane
+      const typeClass = (note.type || 'other').toLowerCase();
+      const displayType = typeClass === 'tool' ? 'Tool' : (typeClass === 'ai' ? 'AI' : 'Other');
+
+      // Update Inbox Detail Pane
+      const dtlTag = document.getElementById('dtlTag');
+      if (dtlTag) {
+        dtlTag.className = 'tag-pill ' + typeClass;
+        dtlTag.textContent = displayType.toUpperCase();
+      }
+      const dtlMeta = document.getElementById('dtlMeta');
+      if (dtlMeta) dtlMeta.textContent = `${note.creator} • Saved ${note.saved_at}`;
+      const dtlTitle = document.getElementById('dtlTitle');
+      if (dtlTitle) dtlTitle.textContent = note.title;
+      const dtlSummary = document.getElementById('dtlSummary');
+      if (dtlSummary) dtlSummary.textContent = note.summary || 'Summary generated directly from verified transcript content.';
+      const dtlTranscript = document.getElementById('dtlTranscript');
+      if (dtlTranscript) dtlTranscript.textContent = note.transcript || 'No audio transcript content.';
+
+      const stepsBox = document.getElementById('dtlStepsContainer');
+      const stepsDiv = document.getElementById('dtlSteps');
+      if (note.steps && note.steps.length > 0) {
+        stepsBox.style.display = 'block';
+        stepsDiv.innerHTML = note.steps.map(s => `<div>• ${s}</div>`).join('');
+      } else {
+        stepsBox.style.display = 'none';
+      }
+
+      // Update Library Detail Pane
+      const libTag = document.getElementById('libTag');
+      if (libTag) {
+        libTag.className = 'tag-pill ' + typeClass;
+        libTag.textContent = displayType.toUpperCase();
+      }
+      const libMeta = document.getElementById('libMeta');
+      if (libMeta) libMeta.textContent = `${note.creator} • ${note.saved_at}`;
+      const libTitle = document.getElementById('libTitle');
+      if (libTitle) libTitle.textContent = note.title;
+      const libSummary = document.getElementById('libSummary');
+      if (libSummary) libSummary.textContent = note.summary || '';
+      const libTranscript = document.getElementById('libTranscript');
+      if (libTranscript) libTranscript.textContent = note.transcript || '';
+
+      // On mobile view (< 768px), if the user explicitly clicked the card, open the bottom modal sheet
+      if (isUserClick && window.innerWidth < 768) {
+        openNoteModal(note);
+      }
     }
 
     function openNoteModal(note) {
       document.getElementById('noteDetailTitle').textContent = note.title;
-      document.getElementById('noteDetailMeta').textContent = `${note.creator} • Saved on ${note.saved_at}`;
-      document.getElementById('noteDetailSummary').textContent = note.summary || 'Full transcript note';
-      document.getElementById('noteDetailTranscript').textContent = note.transcript;
+      document.getElementById('noteDetailMeta').textContent = `${note.creator} • Saved ${note.saved_at}`;
+      document.getElementById('noteDetailSummary').textContent = note.summary || 'Real transcript excerpts available below.';
+      document.getElementById('noteDetailTranscript').textContent = note.transcript || '';
 
       const tagEl = document.getElementById('noteDetailTag');
-      tagEl.className = 'tag ' + (note.type || 'other');
+      tagEl.className = 'tag-pill ' + (note.type || 'other').toLowerCase();
       tagEl.textContent = (note.type || 'other').toUpperCase();
 
       const stepsContainer = document.getElementById('noteDetailSteps');
       const stepsBox = document.getElementById('noteDetailStepsBox');
       if (note.steps && note.steps.length > 0) {
         stepsBox.style.display = 'block';
-        stepsContainer.innerHTML = note.steps.map(s => `<div>${s}</div>`).join('');
+        stepsContainer.innerHTML = note.steps.map(s => `<div>• ${s}</div>`).join('');
       } else {
         stepsBox.style.display = 'none';
       }
@@ -758,30 +2152,32 @@
       document.getElementById('noteDetailModal').classList.add('open');
     }
 
-    function closeNoteModal() { document.getElementById('noteDetailModal').classList.remove('open'); }
-    function openApprovalModal() {
-      renderApprovals();
-      document.getElementById('approvalModal').classList.add('open');
+    function closeNoteModal() {
+      document.getElementById('noteDetailModal').classList.remove('open');
     }
-    function closeApprovalModal() { document.getElementById('approvalModal').classList.remove('open'); }
 
     function renderApprovals() {
-      const list = document.getElementById('approvalsList');
+      const list = document.getElementById('approvalsPageList');
+      if (!list) return;
       list.innerHTML = '';
+
       if (!pendingApprovals || pendingApprovals.length === 0) {
-        list.innerHTML = '<p style="color:var(--text-muted); padding:10px 0;">No skills awaiting approval.</p>';
+        list.innerHTML = '<div class="panel-block" style="color:var(--text-muted); font-size:12px;">No quarantined skills awaiting approval. All skills verified.</div>';
         return;
       }
+
       pendingApprovals.forEach(app => {
         const item = document.createElement('div');
-        item.className = 'approval-item';
+        item.className = 'approval-card';
+        const reasonsText = (app.reasons && app.reasons.length > 0) ? app.reasons.join('; ') : 'Quarantined for administrator inspection';
         item.innerHTML = `
-          <div class="approval-row">
-            <span style="font-weight:700; font-size:16px;">${app.name}</span>
-            <span class="approval-badge">${app.risk_level} RISK</span>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; font-size:14px; color:#fff;">${app.name}</span>
+            <span class="badge-status ${app.risk_level === 'HIGH' ? 'err' : 'warn'}">${app.risk_level} RISK</span>
           </div>
-          <div style="font-size:13px; color:var(--text-muted);">${app.reasons[0] || 'Contains scripts/code'}</div>
-          <div class="approval-actions">
+          <div class="mono" style="font-size:11px; color:var(--accent);">Repo: ${app.repo_url || 'unverified'}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${reasonsText}</div>
+          <div class="approval-card-actions">
             <button class="btn-approve" onclick="approveSkill('${app.name}')">Approve &amp; Install</button>
             <button class="btn-reject" onclick="rejectSkill('${app.name}')">Reject</button>
           </div>
@@ -793,21 +2189,25 @@
     async function approveSkill(name) {
       await fetch('/api/approvals/approve', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name})
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Elion-Token': window.elionAuthToken || ''
+        },
+        body: JSON.stringify({name, token: window.elionAuthToken || ''})
       });
       await loadData();
-      renderApprovals();
     }
 
     async function rejectSkill(name) {
       await fetch('/api/approvals/reject', {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({name})
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Elion-Token': window.elionAuthToken || ''
+        },
+        body: JSON.stringify({name, token: window.elionAuthToken || ''})
       });
       await loadData();
-      renderApprovals();
     }
 
     async function handleChatSubmit(e) {
@@ -817,11 +2217,11 @@
       if (!q) return;
 
       const chatBox = document.getElementById('chatMessages');
-      chatBox.innerHTML += `<div class="chat-msg user">${q}</div>`;
+      chatBox.innerHTML += `<div class="bubble user">${q}</div>`;
       input.value = '';
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      chatBox.innerHTML += `<div class="chat-msg jarvis" id="typingMsg">Searching local vault...</div>`;
+      chatBox.innerHTML += `<div class="bubble jarvis" id="typingMsg">Querying local vault notes...</div>`;
 
       try {
         const res = await fetch('/api/ask', {
@@ -830,13 +2230,25 @@
           body: JSON.stringify({query: q})
         });
         const data = await res.json();
-        document.getElementById('typingMsg').remove();
-        chatBox.innerHTML += `<div class="chat-msg jarvis">${data.answer}</div>`;
+        const typingEl = document.getElementById('typingMsg');
+        if (typingEl) typingEl.remove();
+        chatBox.innerHTML += `<div class="bubble jarvis">${data.answer}</div>`;
       } catch (err) {
-        document.getElementById('typingMsg').textContent = 'Error querying vault.';
+        const typingEl = document.getElementById('typingMsg');
+        if (typingEl) typingEl.textContent = 'Error querying local vault.';
       }
       chatBox.scrollTop = chatBox.scrollHeight;
     }
+
+    // Responsive setup check
+    function checkViewport() {
+      const topBar = document.getElementById('desktopTopBar');
+      if (topBar) {
+        topBar.style.display = window.innerWidth >= 1024 ? 'flex' : 'none';
+      }
+    }
+    window.addEventListener('resize', checkViewport);
+    checkViewport();
 
     loadData();
     setInterval(refreshDaemonStatus, 3000);

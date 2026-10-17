@@ -39,7 +39,7 @@ def run_pipeline(adapter_override: str = None, limit_override: int = None):
     transcriber = AudioTranscriber(
         model_name=transcribe_cfg.get("model", "base.en")
     )
-    classifier = VideoClassifier(state_manager=state_mgr)
+    classifier = VideoClassifier(state_manager=state_mgr, config=cfg)
     skill_checker = SkillChecker(
         approvals_dir=PROJECT_ROOT / "vault" / "approvals",
         queue_all_by_default=safety_cfg.get("queue_markdown_skills", True)

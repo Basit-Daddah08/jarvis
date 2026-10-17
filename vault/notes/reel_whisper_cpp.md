@@ -10,7 +10,7 @@ links: []
 # Local Audio Transcription with whisper.cpp on Laptop
 
 ## Summary
-AI tool and workflow overview.
+Run whisper.cpp locally with quantized ggml-base.en model on CPU in under 2 seconds without paying for transcription APIs.
 
 ## Steps
 1. Never pay for transcription APIs again.
